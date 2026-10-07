@@ -1,0 +1,250 @@
+{
+  "format": "plan-do-see-export",
+  "schema": "pds-schema-v2",
+  "exported_at": "2026-10-07T06:35:43.371Z",
+  "notes": {
+    "timezone": "시각(timestamptz)은 UTC로 저장·내보내고 화면에서는 Asia/Seoul로 보여 준다. 날짜(date)는 서울 달력 날짜 그대로다.",
+    "units": {
+      "estimated_hours": "시간(hour)",
+      "actual_minutes": "분(minute)"
+    }
+  },
+  "counts": {
+    "plans": 1,
+    "plan_revisions": 2,
+    "todos": 8,
+    "execution_logs": 3,
+    "completions": 0,
+    "reviews": 1
+  },
+  "data": {
+    "plans": [
+      {
+        "id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "정보처리기사 실기 시험 준비 (주 5회 공부)",
+        "start_date": "2026-10-07",
+        "end_date": "2026-10-25",
+        "priority": "높음",
+        "success_criteria": "시험일(10/25)까지 남은 기간 동안 평일마다 5시간씩 공부한다 (주 5회).",
+        "estimated_hours": 60,
+        "created_at": "2026-10-07T05:12:13.586531+00:00",
+        "updated_at": "2026-10-07T05:12:27.050575+00:00"
+      }
+    ],
+    "plan_revisions": [
+      {
+        "id": "bf90ac50-97f0-4f1a-9d2a-4257082a8636",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "revision_no": 2,
+        "title": "정보처리기사 실기 시험 준비 (주 5회 공부)",
+        "start_date": "2026-10-07",
+        "end_date": "2026-10-25",
+        "priority": "높음",
+        "success_criteria": "시험일(10/25)까지 남은 기간 동안 평일마다 5시간씩 공부한다 (주 5회).",
+        "estimated_hours": 60,
+        "revised_at": "2026-10-07T05:12:27.050575+00:00"
+      },
+      {
+        "id": "f2222603-8346-4df8-886b-495ea93c8bd9",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "revision_no": 1,
+        "title": "정보처리기사 실기 시험 준비 (주 5회 공부)",
+        "start_date": "2026-10-07",
+        "end_date": "2026-10-25",
+        "priority": "높음",
+        "success_criteria": "시험일(10/25)까지 남은 기간 동안 평일마다 5시간씩 공부한다 (주 5회).",
+        "estimated_hours": 65,
+        "revised_at": "2026-10-07T05:12:13.586531+00:00"
+      }
+    ],
+    "todos": [
+      {
+        "id": "27295f0b-a195-441b-97b1-604c7f78571d",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "네트워크·보안 용어 암기",
+        "due_date": "2026-10-21",
+        "priority": "낮음",
+        "tags": [
+          "이론",
+          "보안"
+        ],
+        "estimated_hours": 3,
+        "status": "진행 중",
+        "completed_at": null,
+        "created_at": "2026-10-07T05:29:22.019258+00:00",
+        "updated_at": "2026-10-07T05:29:22.019258+00:00",
+        "source_review_id": null
+      },
+      {
+        "id": "28186772-1116-47e5-9232-a55f6e8c0db9",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "최근 3개년 기출 모의고사",
+        "due_date": "2026-10-23",
+        "priority": "높음",
+        "tags": [
+          "기출"
+        ],
+        "estimated_hours": 10,
+        "status": "진행 중",
+        "completed_at": null,
+        "created_at": "2026-10-07T05:29:26.605232+00:00",
+        "updated_at": "2026-10-07T05:29:26.605232+00:00",
+        "source_review_id": null
+      },
+      {
+        "id": "2baf5c0c-871f-4298-a284-dacacea25087",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "코드 해석은 개념만 외우지 말고 매일 코드 1문제씩 직접 읽는다",
+        "due_date": "2026-10-08",
+        "priority": "높음",
+        "tags": [
+          "돌아보기"
+        ],
+        "estimated_hours": 1,
+        "status": "진행 중",
+        "completed_at": null,
+        "created_at": "2026-10-07T06:30:11.859887+00:00",
+        "updated_at": "2026-10-07T06:30:11.859887+00:00",
+        "source_review_id": "78e52f6c-adda-4986-a423-c4505b74f5e7"
+      },
+      {
+        "id": "2e6ac0f3-2122-4e47-b8d7-45c76b494ba8",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "Java 객체지향·상속 코드 해석",
+        "due_date": "2026-10-16",
+        "priority": "높음",
+        "tags": [
+          "프로그래밍",
+          "Java"
+        ],
+        "estimated_hours": 5,
+        "status": "진행 중",
+        "completed_at": null,
+        "created_at": "2026-10-07T05:29:13.536946+00:00",
+        "updated_at": "2026-10-07T05:29:13.536946+00:00",
+        "source_review_id": null
+      },
+      {
+        "id": "4bd115cb-088c-4d6c-bb55-b62e5490b6e2",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "데이터베이스 정규화·키 개념 정리",
+        "due_date": "2026-10-12",
+        "priority": "보통",
+        "tags": [
+          "DB",
+          "이론"
+        ],
+        "estimated_hours": 3,
+        "status": "진행 중",
+        "completed_at": null,
+        "created_at": "2026-10-07T05:29:04.045964+00:00",
+        "updated_at": "2026-10-07T05:29:04.045964+00:00",
+        "source_review_id": null
+      },
+      {
+        "id": "557395a5-cb30-4033-9f4e-e469760d2935",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "SQL 기출문제 풀이",
+        "due_date": "2026-10-09",
+        "priority": "높음",
+        "tags": [
+          "SQL",
+          "DB"
+        ],
+        "estimated_hours": 5,
+        "status": "진행 중",
+        "completed_at": null,
+        "created_at": "2026-10-07T05:28:54.693581+00:00",
+        "updated_at": "2026-10-07T05:28:54.693581+00:00",
+        "source_review_id": null
+      },
+      {
+        "id": "a3573046-6562-43b1-98db-4801c0c721c8",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "소프트웨어 공학 UML·디자인 패턴 정리",
+        "due_date": "2026-10-19",
+        "priority": "보통",
+        "tags": [
+          "이론",
+          "UML"
+        ],
+        "estimated_hours": 4,
+        "status": "진행 중",
+        "completed_at": null,
+        "created_at": "2026-10-07T05:29:17.736674+00:00",
+        "updated_at": "2026-10-07T05:29:17.736674+00:00",
+        "source_review_id": null
+      },
+      {
+        "id": "e4455ef4-6c5f-4c4a-8433-44b6e97a5b06",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "C언어 포인터·배열 코드 해석",
+        "due_date": "2026-10-14",
+        "priority": "높음",
+        "tags": [
+          "프로그래밍",
+          "C"
+        ],
+        "estimated_hours": 5,
+        "status": "진행 중",
+        "completed_at": null,
+        "created_at": "2026-10-07T05:29:08.252318+00:00",
+        "updated_at": "2026-10-07T05:29:08.252318+00:00",
+        "source_review_id": null
+      }
+    ],
+    "execution_logs": [
+      {
+        "id": "0a95efa2-db26-49d3-af00-d3af66721043",
+        "todo_id": "27295f0b-a195-441b-97b1-604c7f78571d",
+        "started_at": "2026-10-04T02:00:00+00:00",
+        "ended_at": "2026-10-04T08:00:00+00:00",
+        "actual_minutes": 240,
+        "blocked_reason": null,
+        "request_key": "4d507746-3974-4f25-ac04-bcf4a9ac07b0",
+        "created_at": "2026-10-07T06:22:00.10005+00:00"
+      },
+      {
+        "id": "544ce272-78e7-47a2-bf89-cefeccbd8704",
+        "todo_id": "2e6ac0f3-2122-4e47-b8d7-45c76b494ba8",
+        "started_at": "2026-10-03T05:00:00+00:00",
+        "ended_at": "2026-10-03T10:00:00+00:00",
+        "actual_minutes": 240,
+        "blocked_reason": "코딩을 복습할려다 보니 좀 힘들어서 개념만 외우기로 함, 실제 코드 리딩 능력은 몸으로 익히기로",
+        "request_key": "cf8131c1-24ca-4454-b2f6-34dc451f2e10",
+        "created_at": "2026-10-07T06:21:50.25278+00:00"
+      },
+      {
+        "id": "cf134512-525b-4481-8c81-42e173f96966",
+        "todo_id": "28186772-1116-47e5-9232-a55f6e8c0db9",
+        "started_at": "2026-10-05T01:00:00+00:00",
+        "ended_at": "2026-10-05T08:00:00+00:00",
+        "actual_minutes": 300,
+        "blocked_reason": "이해를 해도 나중에 되돌아보면 비슷한 개념끼리 헷갈려서 그림으로 도식화 하고 복습함",
+        "request_key": "8c41dc20-6b3f-4f43-b891-31309a08ec81",
+        "created_at": "2026-10-07T06:17:19.37707+00:00"
+      }
+    ],
+    "completions": [],
+    "reviews": [
+      {
+        "id": "78e52f6c-adda-4986-a423-c4505b74f5e7",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "period_from": "2026-10-07",
+        "period_to": "2026-10-25",
+        "takeaway": "코드 해석은 개념만 외우지 말고 매일 코드 1문제씩 직접 읽는다",
+        "snapshot": {
+          "done": 0,
+          "late": 0,
+          "today": "2026-10-07",
+          "blocked": 2,
+          "planned": 7,
+          "estMinutes": 2100,
+          "diffMinutes": -1320,
+          "actualMinutes": 780
+        },
+        "created_at": "2026-10-07T06:30:11.859887+00:00"
+      }
+    ]
+  }
+}
