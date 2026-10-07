@@ -33,6 +33,23 @@ export type Todo = {
   updated_at: string
 }
 
+export type ExecutionLog = {
+  id: string
+  todo_id: string
+  started_at: string
+  ended_at: string
+  actual_minutes: number
+  blocked_reason: string | null
+  created_at: string
+}
+
+export type Completion = {
+  id: string
+  todo_id: string
+  completed_at: string
+  reverted_at: string | null
+}
+
 // service_role 키는 서버에서만 쓰며 NEXT_PUBLIC_ 접두사를 붙이지 않는다.
 export function db() {
   const url = process.env.SUPABASE_URL

@@ -98,3 +98,20 @@ small { color: var(--muted); font-weight: normal; }
 .todo-actions summary { cursor: pointer; color: var(--accent); }
 .todo-actions details .form, .todo-actions details form { margin-top: 8px; }
 .todo-actions .danger, .form .danger { background: var(--err); color: var(--bg); border: 0; }
+
+/* 카드 3: 실행 기록, 돌아보기 요약 */
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 8px 0 14px; }
+.summary > div { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; }
+.summary span { color: var(--muted); font-size: 0.85rem; }
+.summary strong { font-size: 1.15rem; }
+.summary small { color: var(--muted); }
+.log-box { margin-top: 10px; border-top: 1px dashed var(--line); padding-top: 8px; }
+.log-box h4 { margin: 0 0 6px; font-size: 0.95rem; }
+.log-box summary { cursor: pointer; color: var(--accent); }
+.log-box details .form { margin-top: 8px; }
+.logs { list-style: none; padding: 0; margin: 0 0 8px; display: grid; gap: 6px; }
+.logs li { display: grid; gap: 2px; font-size: 0.9rem; padding: 6px 10px; background: color-mix(in srgb, var(--line) 25%, transparent); border-radius: 6px; }
+.blocked { color: var(--warn-fg); }
+.log-empty { color: var(--muted); font-size: 0.9rem; margin: 0 0 6px; }
+.link-button { font: inherit; font-size: 0.85rem; background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; padding: 0; justify-self: start; }
+@media (prefers-color-scheme: dark) { .blocked { color: var(--warn-fg); } }
