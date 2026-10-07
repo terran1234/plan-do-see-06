@@ -98,15 +98,19 @@ function TodoItem({ todo, planId, logs }: { todo: Todo; planId: string; logs: Ex
   const done = todo.status === '완료'
   const actualMinutes = logs.reduce((s, l) => s + l.actual_minutes, 0)
   return (
-    <li className={done ? 'todo done' : 'todo'} id={`todo-${todo.id}`}>
+    <li className={done ? 'todo done' : 'todo'} id={`todo-${todo.id}`} data-priority={todo.priority}>
       <div className="todo-head">
-        <strong>{todo.title}</strong>
-        <span className={done ? 'badge badge-done' : 'badge'}>{todo.status}</span>
+        <strong className="todo-title">{todo.title}</strong>
+        <span className={done ? 'badge badge-done' : 'badge'}>{done ? '✓ 완료' : todo.status}</span>
       </div>
-      <p className="todo-meta">
-        마감 {todo.due_date} · 우선순위 {todo.priority} · 예상 {todo.estimated_hours}시간
-        {todo.tags.length > 0 && <> · {todo.tags.map((t) => `#${t}`).join(' ')}</>}
-        {todo.source_review_id && <> · <span className="carried">돌아보기에서 넘어온 고칠 점</span></>}
+      <p className="todo-meta chips">
+        <span className="chip">📅 마감 {todo.due_date}</span>
+        <span className="chip chip-prio" data-p={todo.priority}>우선순위 {todo.priority}</span>
+        <span className="chip">⏱ 예상 {todo.estimated_hours}시간</span>
+        {todo.tags.map((t) => (
+          <span className="chip chip-tag" key={t}>#{t}</span>
+        ))}
+        {todo.source_review_id && <span className="chip chip-carried">🔁 돌아보기에서 넘어온 고칠 점</span>}
       </p>
 
       <div className="todo-actions">
@@ -143,6 +147,17 @@ function TodoItem({ todo, planId, logs }: { todo: Todo; planId: string; logs: Ex
           실행 기록 {logs.length}건
           {logs.length > 0 && <> · 실제 합계 {fmtMinutes(actualMinutes)} (계획 예상 {todo.estimated_hours}시간)</>}
         </h4>
+        {logs.length > 0 && (
+          <div className="progress">
+            <div className="bar" role="img" aria-label={`예상 ${todo.estimated_hours}시간 중 실제 ${fmtMinutes(actualMinutes)}`}>
+              <span style={{ width: `${Math.min(100, Math.round((actualMinutes / (Number(todo.estimated_hours) * 60)) * 100))}%` }} />
+            </div>
+            <p className="bar-label">
+              <span>실제 {fmtMinutes(actualMinutes)}</span>
+              <span>예상 {todo.estimated_hours}시간 ({Math.round((actualMinutes / (Number(todo.estimated_hours) * 60)) * 100)}%)</span>
+            </p>
+          </div>
+        )}
         <LogList logs={logs} todoId={todo.id} planId={planId} />
         <details>
           <summary>실행 기록 남기기</summary>
@@ -212,7 +227,9 @@ export default async function TodoSection({
     <section id="todos">
       <h2>할 일 ({all.length}개 · 완료 {doneCount}개)</h2>
 
-      <p><a href={`/plans/${planId}/review`}>돌아보기 화면으로 → 지연·막힘·예상 대비 실제 시간, 다음 계획으로 넘기기</a></p>
+      <p>
+        <a className="export-link" href={`/plans/${planId}/review`}>📊 돌아보기 화면으로 — 지연·막힘·예상 대비 실제 시간, 다음 계획으로 넘기기</a>
+      </p>
       <div className="summary" aria-label="돌아보기 요약">
         <div>
           <span>완료한 할 일</span>

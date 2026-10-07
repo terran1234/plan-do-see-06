@@ -20,12 +20,15 @@ async function PlanList() {
     <ul className="list">
       {plans.map((p) => (
         <li key={p.id}>
-          <Link href={`/plans/${p.id}`}>
+          <Link href={`/plans/${p.id}`} className="plan-card">
             <strong>{p.title}</strong>
+            <span className="chips">
+              <span className="chip">📅 {p.start_date} ~ {p.end_date}</span>
+              <span className="chip chip-prio" data-p={p.priority}>우선순위 {p.priority}</span>
+              <span className="chip">⏱ 예상 {p.estimated_hours}시간</span>
+            </span>
+            <span className="go">열어서 할 일·실행 기록·돌아보기 보기 →</span>
           </Link>
-          <span>
-            {p.start_date} ~ {p.end_date} · 우선순위 {p.priority} · 예상 {p.estimated_hours}시간
-          </span>
         </li>
       ))}
     </ul>
@@ -40,10 +43,11 @@ async function ErrorMessage({ searchParams }: { searchParams: SearchParams }) {
 export default function Home({ searchParams }: { searchParams: SearchParams }) {
   return (
     <main>
-      <h1>플랜두씨 다이어리</h1>
+      <h1>내 계획, 내 기록</h1>
+      <p className="lead">계획을 세우고(Plan) → 실제로 한 일을 적고(Do) → 돌아보며 다음 계획을 고칩니다(See).</p>
       <PublicNotice />
       <p>
-        <a href="/api/export" download>내 자료 전체를 파일 하나로 내보내기 (JSON)</a>
+        <a className="export-link" href="/api/export" download>⬇ 내 자료 전체를 파일 하나로 내보내기 (JSON)</a>
       </p>
 
       <h2>내 계획</h2>

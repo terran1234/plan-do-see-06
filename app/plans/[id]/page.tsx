@@ -27,9 +27,30 @@ async function Todos({ params, searchParams }: Props) {
   return <TodoSection planId={id} searchParams={searchParams} />
 }
 
-async function PlanDetail({ params, searchParams }: Props) {
+async function PlanHeader({ params, searchParams }: Props) {
   const { id } = await params
-  const { error, saved } = await searchParams
+  const { saved } = await searchParams
+  if (!/^[0-9a-f-]{36}$/i.test(id)) notFound()
+  const { data } = await db().from('plans').select('*').eq('id', id).maybeSingle()
+  if (!data) notFound()
+  const plan = data as Plan
+  return (
+    <>
+      <h1>{plan.title}</h1>
+      <p className="chips">
+        <span className="chip">📅 {plan.start_date} ~ {plan.end_date}</span>
+        <span className="chip chip-prio" data-p={plan.priority}>우선순위 {plan.priority}</span>
+        <span className="chip">⏱ 예상 {plan.estimated_hours}시간</span>
+      </p>
+      <p className="lead">🎯 성공 기준: {plan.success_criteria}</p>
+      {saved && <p className="ok" role="status">저장했습니다.</p>}
+    </>
+  )
+}
+
+async function PlanEditor({ params, searchParams }: Props) {
+  const { id } = await params
+  const { error } = await searchParams
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound()
 
   const supabase = db()
@@ -41,10 +62,7 @@ async function PlanDetail({ params, searchParams }: Props) {
   const revisions = (revs ?? []) as PlanRevision[]
 
   return (
-    <>
-      <h1>{(plan as Plan).title}</h1>
-      {saved && <p className="ok" role="status">저장했습니다.</p>}
-
+    <section id="plan-edit">
       <h2>계획 고치기</h2>
       {error && <p className="error" role="alert">{error}</p>}
       <PlanForm action={updatePlan} plan={plan as Plan} submitLabel="고쳐서 저장" />
@@ -70,22 +88,27 @@ async function PlanDetail({ params, searchParams }: Props) {
           </li>
         ))}
       </ol>
-    </>
+    </section>
   )
 }
 
 export default function PlanPage(props: Props) {
   return (
     <main>
-      <p>
-        <Link href="/">← 계획 목록</Link> · <a href="#todos">할 일로 이동 ↓</a>
+      <p className="crumbs">
+        <Link href="/">← 계획 목록</Link>
+        <a href="#todos">할 일 ↓</a>
+        <a href="#plan-edit">계획 고치기·수정 이력 ↓</a>
       </p>
       <PublicNotice />
       <Suspense fallback={<p>불러오는 중…</p>}>
-        <PlanDetail {...props} />
+        <PlanHeader {...props} />
       </Suspense>
       <Suspense fallback={<p>할 일을 불러오는 중…</p>}>
         <Todos {...props} />
+      </Suspense>
+      <Suspense fallback={<p>계획 정보를 불러오는 중…</p>}>
+        <PlanEditor {...props} />
       </Suspense>
     </main>
   )

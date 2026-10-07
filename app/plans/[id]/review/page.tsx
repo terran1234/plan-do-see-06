@@ -81,7 +81,7 @@ async function Review({ params, searchParams }: Props) {
 
   return (
     <>
-      <p><Link href={`/plans/${id}`}>← 계획 화면</Link></p>
+      <p className="crumbs"><Link href={`/plans/${id}`}>← 계획 화면</Link></p>
       <h1>돌아보기 — {plan.title}</h1>
       <p>
         오늘(서울) <strong>{today}</strong> 기준 · 대상: 마감일이 <strong>{from} ~ {to}</strong>인 할 일
@@ -118,6 +118,15 @@ async function Review({ params, searchParams }: Props) {
           <strong><Num planId={id} from={from} to={to} show="hours">{fmtDiff(m.diffMinutes)}</Num></strong>
           <small>{m.diffMinutes > 0 ? '예상보다 오래 걸림' : m.diffMinutes < 0 ? '예상보다 적게 걸림(또는 기록 없음)' : '예상과 같음'}</small>
         </div>
+      </div>
+      <div className="progress">
+        <div className="bar" role="img" aria-label="예상 시간 대비 실제 시간">
+          <span style={{ width: `${m.estMinutes === 0 ? 0 : Math.min(100, Math.round((m.actualMinutes / m.estMinutes) * 100))}%` }} />
+        </div>
+        <p className="bar-label">
+          <span>실제 {fmtMinutes(m.actualMinutes)}</span>
+          <span>예상 {fmtMinutes(m.estMinutes)} 중 {m.estMinutes === 0 ? 0 : Math.round((m.actualMinutes / m.estMinutes) * 100)}%</span>
+        </p>
       </div>
       <p className="sort-note" role="note">
         계산 기준: 계획 수 = 기간 안에 마감인 할 일(지운 것 제외) · 완료 수 = 그중 지금 완료 상태 · 지연 수 = 완료가 아니고 마감일이 오늘보다 앞(완료한 건 지연으로 세지 않음) ·
@@ -293,7 +302,7 @@ function TodoList({
 export default function ReviewPage(props: Props) {
   return (
     <main>
-      <p><Link href="/">계획 목록</Link></p>
+      <p className="crumbs"><Link href="/">← 계획 목록</Link></p>
       <PublicNotice />
       <Suspense fallback={<p>집계하는 중…</p>}>
         <Review {...props} />
