@@ -75,9 +75,9 @@ create trigger plans_touch before update on plans
 drop trigger if exists plans_revision_upd on plans;
 create trigger plans_revision_upd after update on plans
   for each row
-  when (old.title, old.start_date, old.end_date, old.priority, old.success_criteria, old.estimated_hours)
-       is distinct from
-       (new.title, new.start_date, new.end_date, new.priority, new.success_criteria, new.estimated_hours)
+  when (row(old.title, old.start_date, old.end_date, old.priority, old.success_criteria, old.estimated_hours)
+        is distinct from
+        row(new.title, new.start_date, new.end_date, new.priority, new.success_criteria, new.estimated_hours))
   execute function record_plan_revision_upd();
 
 -- 이력 행은 고쳐 쓸 수 없게 막음 (원본 보존)
@@ -95,3 +95,8 @@ create trigger revisions_readonly before update on plan_revisions
 -- 앱은 서버에서만 service_role 키로 접근합니다.
 alter table plans enable row level security;
 alter table plan_revisions enable row level security;
+
+-- 서버 키(service_role)만 접근 가능. anon/authenticated 권한은 모두 회수.
+grant usage on schema public to service_role;
+grant select, insert, update, delete on plans, plan_revisions to service_role;
+revoke all on plans, plan_revisions from anon, authenticated;
