@@ -106,6 +106,7 @@ function TodoItem({ todo, planId, logs }: { todo: Todo; planId: string; logs: Ex
       <p className="todo-meta">
         마감 {todo.due_date} · 우선순위 {todo.priority} · 예상 {todo.estimated_hours}시간
         {todo.tags.length > 0 && <> · {todo.tags.map((t) => `#${t}`).join(' ')}</>}
+        {todo.source_review_id && <> · <span className="carried">돌아보기에서 넘어온 고칠 점</span></>}
       </p>
 
       <div className="todo-actions">
@@ -211,6 +212,7 @@ export default async function TodoSection({
     <section id="todos">
       <h2>할 일 ({all.length}개 · 완료 {doneCount}개)</h2>
 
+      <p><a href={`/plans/${planId}/review`}>돌아보기 화면으로 → 지연·막힘·예상 대비 실제 시간, 다음 계획으로 넘기기</a></p>
       <div className="summary" aria-label="돌아보기 요약">
         <div>
           <span>완료한 할 일</span>

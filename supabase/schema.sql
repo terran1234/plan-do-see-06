@@ -180,3 +180,47 @@ grant select, insert, update, delete on execution_logs, completions to service_r
 revoke all on execution_logs, completions from anon, authenticated;
 revoke execute on function complete_todo(uuid, uuid, text), reopen_todo(uuid, uuid) from public, anon, authenticated;
 grant execute on function complete_todo(uuid, uuid, text), reopen_todo(uuid, uuid) to service_role;
+
+-- ============ 카드 4: 돌아보기 → 다음 계획 ============
+-- 돌아보기에서 정한 "고칠 점 한 줄". 그 시점의 집계 숫자(snapshot)도 함께 남긴다.
+create table if not exists reviews (
+  id          uuid primary key default gen_random_uuid(),
+  plan_id     uuid not null references plans(id) on delete cascade,
+  period_from date not null,
+  period_to   date not null,
+  takeaway    text not null check (char_length(takeaway) between 1 and 100),
+  snapshot    jsonb not null,
+  created_at  timestamptz not null default now(),
+  check (period_to >= period_from),
+  unique (plan_id, period_from, period_to)   -- 같은 기간의 돌아보기는 한 번만 넘긴다
+);
+
+-- 다음 계획으로 넘어온 할 일은 어느 돌아보기에서 왔는지 이어 둔다 (돌아보기 하나당 할 일 하나)
+alter table todos add column if not exists source_review_id uuid references reviews(id) on delete set null;
+create unique index if not exists todos_one_per_review on todos(source_review_id) where source_review_id is not null;
+
+create or replace function carry_review(
+  p_plan uuid, p_from date, p_to date, p_takeaway text, p_snapshot jsonb,
+  p_due date, p_priority text, p_hours numeric
+) returns uuid as $$
+declare v_review uuid; v_todo uuid;
+begin
+  perform 1 from plans where id = p_plan for update;
+  if not found then raise exception 'plan not found'; end if;
+  insert into reviews (plan_id, period_from, period_to, takeaway, snapshot)
+    values (p_plan, p_from, p_to, p_takeaway, p_snapshot)
+    on conflict (plan_id, period_from, period_to) do nothing
+    returning id into v_review;
+  if v_review is null then return null; end if;   -- 이미 넘긴 기간
+  insert into todos (plan_id, title, due_date, priority, tags, estimated_hours, source_review_id)
+    values (p_plan, p_takeaway, p_due, p_priority, array['돌아보기'], p_hours, v_review)
+    returning id into v_todo;
+  return v_todo;
+end;
+$$ language plpgsql;
+
+alter table reviews enable row level security;
+grant select, insert, update, delete on reviews to service_role;
+revoke all on reviews from anon, authenticated;
+revoke execute on function carry_review(uuid, date, date, text, jsonb, date, text, numeric) from public, anon, authenticated;
+grant execute on function carry_review(uuid, date, date, text, jsonb, date, text, numeric) to service_role;

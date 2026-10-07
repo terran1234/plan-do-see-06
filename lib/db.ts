@@ -28,6 +28,7 @@ export type Todo = {
   tags: string[]
   estimated_hours: number
   status: '진행 중' | '완료'
+  source_review_id: string | null
   completed_at: string | null
   created_at: string
   updated_at: string
