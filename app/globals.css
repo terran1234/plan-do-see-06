@@ -1,0 +1,74 @@
+:root {
+  --bg: #ffffff;
+  --fg: #1a1a1a;
+  --muted: #5f6368;
+  --line: #d9dce1;
+  --accent: #2455c3;
+  --warn-bg: #fff4d6;
+  --warn-fg: #6b4a00;
+  --err: #b3261e;
+  --ok: #1b6e3c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14161a;
+    --fg: #eceef1;
+    --muted: #a0a6b0;
+    --line: #353a42;
+    --accent: #8fb0ff;
+    --warn-bg: #3a3118;
+    --warn-fg: #f3d98a;
+    --err: #ff8a80;
+    --ok: #7fd49b;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  line-height: 1.6;
+}
+
+main { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; }
+a { color: var(--accent); }
+h1 { font-size: 1.6rem; margin: 0 0 12px; }
+h2 { font-size: 1.15rem; margin: 32px 0 8px; }
+h3 { font-size: 1rem; margin: 0 0 6px; }
+small { color: var(--muted); font-weight: normal; }
+
+.notice { background: var(--warn-bg); color: var(--warn-fg); padding: 10px 14px; border-radius: 8px; margin: 0 0 8px; }
+.error { color: var(--err); font-weight: 600; }
+.ok { color: var(--ok); font-weight: 600; }
+
+.list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.list li { border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; display: grid; gap: 2px; }
+.list span { color: var(--muted); font-size: 0.9rem; }
+
+.form { display: grid; gap: 12px; }
+.form label { display: grid; gap: 4px; font-size: 0.9rem; color: var(--muted); }
+.form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form input, .form select, .form textarea {
+  font: inherit; color: var(--fg); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; width: 100%;
+}
+.form button {
+  font: inherit; font-weight: 600; cursor: pointer; justify-self: start;
+  background: var(--accent); color: var(--bg); border: 0; border-radius: 6px; padding: 10px 18px;
+}
+
+.history { list-style: none; padding: 0; display: grid; gap: 12px; }
+.history li { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+.history dl { margin: 0; display: grid; gap: 4px; }
+.history dl div { display: grid; grid-template-columns: 110px 1fr; gap: 8px; }
+.history dt { color: var(--muted); }
+.history dd { margin: 0; word-break: break-word; }
+
+@media (max-width: 520px) {
+  .form .row { grid-template-columns: 1fr; }
+  .history dl div { grid-template-columns: 1fr; gap: 0; }
+}
