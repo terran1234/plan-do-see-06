@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { db, type Plan, type Todo, type ExecutionLog } from '@/lib/db'
 import { analyze, addDays, fmtDiff, fmtMinutes, isDate, todayKst, weekRanges, type Metrics, type ReviewLog } from '@/lib/review'
 import { carryReview } from '@/app/review-actions'
+import PublicNotice from '@/app/PublicNotice'
 
 type SP = {
   from?: string
@@ -293,7 +294,7 @@ export default function ReviewPage(props: Props) {
   return (
     <main>
       <p><Link href="/">계획 목록</Link></p>
-      <p className="notice" role="note">⚠️ 아직 로그인이 없습니다. 링크를 아는 사람은 누구나 볼 수 있습니다.</p>
+      <PublicNotice />
       <Suspense fallback={<p>집계하는 중…</p>}>
         <Review {...props} />
       </Suspense>

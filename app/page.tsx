@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { db, type Plan } from '@/lib/db'
 import { createPlan } from './actions'
 import PlanForm from './PlanForm'
+import PublicNotice from './PublicNotice'
 
 type SearchParams = Promise<{ error?: string }>
 
@@ -40,8 +41,9 @@ export default function Home({ searchParams }: { searchParams: SearchParams }) {
   return (
     <main>
       <h1>플랜두씨 다이어리</h1>
-      <p className="notice" role="note">
-        ⚠️ 아직 로그인이 없습니다. 이 주소를 아는 사람은 누구나 볼 수 있으니, 남이 봐도 괜찮은 내용만 적어 두었습니다.
+      <PublicNotice />
+      <p>
+        <a href="/api/export" download>내 자료 전체를 파일 하나로 내보내기 (JSON)</a>
       </p>
 
       <h2>내 계획</h2>

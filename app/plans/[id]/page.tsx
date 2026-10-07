@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { db, type Plan, type PlanRevision } from '@/lib/db'
 import { updatePlan } from '@/app/actions'
 import PlanForm from '@/app/PlanForm'
+import PublicNotice from '@/app/PublicNotice'
 import TodoSection, { type TodoSearchParams } from './TodoSection'
 
 const FIELDS: [keyof PlanRevision, string][] = [
@@ -79,7 +80,7 @@ export default function PlanPage(props: Props) {
       <p>
         <Link href="/">← 계획 목록</Link> · <a href="#todos">할 일로 이동 ↓</a>
       </p>
-      <p className="notice" role="note">⚠️ 아직 로그인이 없습니다. 링크를 아는 사람은 누구나 볼 수 있습니다.</p>
+      <PublicNotice />
       <Suspense fallback={<p>불러오는 중…</p>}>
         <PlanDetail {...props} />
       </Suspense>
