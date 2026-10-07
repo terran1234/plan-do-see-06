@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { db, type Plan, type PlanRevision } from '@/lib/db'
 import { updatePlan } from '@/app/actions'
 import PlanForm from '@/app/PlanForm'
+import TodoSection, { type TodoSearchParams } from './TodoSection'
 
 const FIELDS: [keyof PlanRevision, string][] = [
   ['title', '계획 이름'],
@@ -16,7 +17,13 @@ const FIELDS: [keyof PlanRevision, string][] = [
 
 type Props = {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ error?: string; saved?: string }>
+  searchParams: Promise<{ error?: string; saved?: string } & TodoSearchParams>
+}
+
+async function Todos({ params, searchParams }: Props) {
+  const { id } = await params
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return null
+  return <TodoSection planId={id} searchParams={searchParams} />
 }
 
 async function PlanDetail({ params, searchParams }: Props) {
@@ -69,10 +76,15 @@ async function PlanDetail({ params, searchParams }: Props) {
 export default function PlanPage(props: Props) {
   return (
     <main>
-      <p><Link href="/">← 계획 목록</Link></p>
+      <p>
+        <Link href="/">← 계획 목록</Link> · <a href="#todos">할 일로 이동 ↓</a>
+      </p>
       <p className="notice" role="note">⚠️ 아직 로그인이 없습니다. 링크를 아는 사람은 누구나 볼 수 있습니다.</p>
       <Suspense fallback={<p>불러오는 중…</p>}>
         <PlanDetail {...props} />
+      </Suspense>
+      <Suspense fallback={<p>할 일을 불러오는 중…</p>}>
+        <Todos {...props} />
       </Suspense>
     </main>
   )

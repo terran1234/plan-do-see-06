@@ -19,6 +19,20 @@ export type PlanRevision = Omit<Plan, 'created_at' | 'updated_at'> & {
   revised_at: string
 }
 
+export type Todo = {
+  id: string
+  plan_id: string
+  title: string
+  due_date: string
+  priority: '높음' | '보통' | '낮음'
+  tags: string[]
+  estimated_hours: number
+  status: '진행 중' | '완료'
+  completed_at: string | null
+  created_at: string
+  updated_at: string
+}
+
 // service_role 키는 서버에서만 쓰며 NEXT_PUBLIC_ 접두사를 붙이지 않는다.
 export function db() {
   const url = process.env.SUPABASE_URL

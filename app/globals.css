@@ -72,3 +72,29 @@ small { color: var(--muted); font-weight: normal; }
   .form .row { grid-template-columns: 1fr; }
   .history dl div { grid-template-columns: 1fr; gap: 0; }
 }
+
+/* 카드 2: 할 일 */
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; align-items: end; margin-bottom: 8px; }
+.filters label { display: grid; gap: 4px; font-size: 0.85rem; color: var(--muted); }
+.filters input, .filters select {
+  font: inherit; color: var(--fg); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; width: 100%;
+}
+.filter-buttons { display: flex; gap: 12px; align-items: center; }
+.filter-buttons button, .todo-actions button {
+  font: inherit; cursor: pointer; color: var(--fg); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px;
+}
+.sort-note { font-size: 0.9rem; color: var(--muted); margin: 8px 0 12px; }
+.todos { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.todo { border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+.todo.done strong { text-decoration: line-through; color: var(--muted); }
+.todo-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.todo-meta { margin: 2px 0 8px; color: var(--muted); font-size: 0.9rem; }
+.badge { font-size: 0.8rem; border: 1px solid var(--line); border-radius: 999px; padding: 1px 10px; white-space: nowrap; }
+.badge-done { color: var(--ok); border-color: var(--ok); }
+.todo-actions { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: flex-start; }
+.todo-actions details { flex-basis: 100%; }
+.todo-actions summary { cursor: pointer; color: var(--accent); }
+.todo-actions details .form, .todo-actions details form { margin-top: 8px; }
+.todo-actions .danger, .form .danger { background: var(--err); color: var(--bg); border: 0; }
