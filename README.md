@@ -1,5 +1,9 @@
 # 플랜두씨 다이어리 1 (과제 6)
 
+- 결과물 주소: https://plan-do-see-06.vercel.app
+- 소스 주소: https://github.com/terran1234/plan-do-see-06
+- 스택: Next.js + Supabase(Postgres) + Vercel
+
 > ⚠️ 아직 로그인이 없습니다. 링크를 아는 사람은 누구나 볼 수 있으니 남이 봐도 괜찮은 내용만 넣었습니다. (잠금은 7번 과제)
 
 ## 카드 1 — 계획 세우기
