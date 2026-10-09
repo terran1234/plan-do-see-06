@@ -46,12 +46,12 @@ async function ErrorMessage({ searchParams }: { searchParams: SearchParams }) {
 export default function Home({ searchParams }: { searchParams: SearchParams }) {
   return (
     <main>
-      <h1>내 계획, 내 기록</h1>
-      <p className="lead">계획을 세우고(Plan) → 실제로 한 일을 적고(Do) → 돌아보며 다음 계획을 고칩니다(See).</p>
-      <PublicNotice />
-      <p>
+      <section className="hero">
+        <h1>내 계획, 내 기록</h1>
+        <p className="lead">계획을 세우고(Plan) → 실제로 한 일을 적고(Do) → 돌아보며 다음 계획을 고칩니다(See).</p>
+        <PublicNotice />
         <a className="export-link" href="/api/export" download>⬇ 내 자료 전체를 파일 하나로 내보내기 (JSON)</a>
-      </p>
+      </section>
 
       <h2>내 계획</h2>
       <Suspense fallback={<p>불러오는 중…</p>}>
