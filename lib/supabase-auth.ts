@@ -1,5 +1,6 @@
 import 'server-only'
 import { cookies } from 'next/headers'
+import { connection } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 // 로그인(인증)용 클라이언트. 사용자의 쿠키로 동작하는 anon 키를 쓴다.
@@ -13,6 +14,10 @@ export function authEnv() {
 
 export async function authClient() {
   const { url, key } = authEnv()
+  // 로그인 라이브러리는 세션 만료를 확인하려고 Date.now() 를 부른다. Next 가 로그인한 사람용 화면을 미리 렌더링(prefetch)하는
+  // 동안에는 이 값이 허용되지 않아 서버 로그에 오류가 남았다. connection() 은 "이 부분은 요청이 올 때 그린다"는 표시라서,
+  // 미리 렌더링할 때는 여기서 멈추고 실제 요청에서만 아래가 실행된다. (오류 메시지가 안내한 방법)
+  await connection()
   const store = await cookies()
   return createServerClient(url, key, {
     cookies: {
