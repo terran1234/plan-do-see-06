@@ -138,7 +138,9 @@
           "shape": {
             "planned": "개수", "done": "개수", "late": "개수", "blocked": "개수",
             "estMinutes": "분", "actualMinutes": "분", "diffMinutes": "분 (실제 − 예상)",
-            "today": "YYYY-MM-DD (서울 기준, 그 집계를 낸 날)"
+            "today": "YYYY-MM-DD (서울 기준, 그 집계를 낸 날)",
+            "reason": "(선택, 7번 과제 카드 5부터) 그 고칠 점을 정한 이유 한 줄, 200자 이하",
+            "daily": "(선택, 7번 과제 카드 5부터) 그 기간에 시작한 실행 기록을 서울 날짜별로 묶은 것: { days: [{ date, minutes, log_ids: [실행 기록 id] }], total_minutes, avg_minutes(합계÷일수, 소수 첫째 자리 반올림), day_count }. 어떤 기록을 보고 정했는지 id로 가리킨다"
           }
         },
         "created_at": { "type": "timestamptz", "nullable": false, "default": "now()" }

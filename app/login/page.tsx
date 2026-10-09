@@ -10,6 +10,9 @@ async function Messages({ searchParams }: { searchParams: SearchParams }) {
   return (
     <>
       {error && <p className="error auth-msg" role="alert">{error}</p>}
+      {notice === 'deleted' && (
+        <p className="ok auth-msg" role="status">계정과 내 자료를 모두 지웠습니다.</p>
+      )}
       {notice === 'confirm' && (
         <p className="ok auth-msg" role="status">가입 확인 메일을 보냈습니다. 메일의 링크를 누른 뒤 로그인하세요.</p>
       )}

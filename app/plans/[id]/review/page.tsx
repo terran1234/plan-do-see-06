@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { db, type Todo, type ExecutionLog } from '@/lib/db'
 import { requireOwnedPlan } from '@/lib/ownership'
-import { analyze, addDays, fmtDiff, fmtMinutes, isDate, todayKst, weekRanges, type Metrics, type ReviewLog } from '@/lib/review'
+import { analyze, addDays, dailyMinutes, fmtDiff, fmtMinutes, isDate, kstWeekday, todayKst, weekRanges, DAY_SPIKE_MIN, LOG_SPIKE_MIN, type Metrics, type ReviewLog } from '@/lib/review'
 import { carryReview } from '@/app/review-actions'
 import PublicNotice from '@/app/PublicNotice'
 
@@ -42,6 +42,14 @@ function todoLink(planId: string, t: { id: string; title: string }) {
   return <a href={`/plans/${planId}#todo-${t.id}`}>{t.title}</a>
 }
 
+function hm(iso: string) {
+  return new Date(iso).toLocaleTimeString('ko-KR', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false })
+}
+
+// 돌아보기를 저장할 때 함께 남긴 일별 기록 (카드 5). 그때 어떤 실행 기록을 보고 정했는지 번호로 가리킨다.
+type SavedDaily = { days: { date: string; minutes: number; log_ids: string[] }[]; total_minutes: number; avg_minutes: number | null; day_count: number }
+type Snapshot = Metrics & { reason?: string; daily?: SavedDaily }
+
 function kst(iso: string) {
   return new Date(iso).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
 }
@@ -72,7 +80,9 @@ async function Review({ params, searchParams }: Props) {
   const { metrics: m, detail } = analyze(todos, logs, from, to, today)
   const weeks = weekRanges(plan.start_date, plan.end_date).map((w) => ({ ...w, m: analyze(todos, logs, w.from, w.to, today).metrics }))
   const carriedByReview = new Map(todos.filter((t) => t.source_review_id).map((t) => [t.source_review_id as string, t]))
-  const reviews = (reviewRows ?? []) as { id: string; period_from: string; period_to: string; takeaway: string; snapshot: Metrics; created_at: string }[]
+  const reviews = (reviewRows ?? []) as { id: string; period_from: string; period_to: string; takeaway: string; snapshot: Snapshot; created_at: string }[]
+  const daily = dailyMinutes(logs, from, to)
+  const titleOf = new Map(todos.map((t) => [t.id, t.title]))
   const alreadyCarried = reviews.some((r) => r.period_from === from && r.period_to === to)
   const defaultDue = addDays(to, 1)
 
@@ -129,6 +139,60 @@ async function Review({ params, searchParams }: Props) {
         계산 기준: 계획 수 = 기간 안에 마감인 할 일(지운 것 제외) · 완료 수 = 그중 지금 완료 상태 · 지연 수 = 완료가 아니고 마감일이 오늘보다 앞(완료한 건 지연으로 세지 않음) ·
         막힘 수 = 막힌 이유가 적힌 실행 기록이 있는 할 일 수 · 시간은 모두 분으로 맞춰 계산하며, 실행 기록이 없는 할 일의 실제 시간은 0으로 칩니다.
       </p>
+
+      <section id="daily">
+        <h2>하루 실제 공부 시간 <small>— 분 단위, 서울 날짜 기준</small></h2>
+        {daily.days.length === 0 ? (
+          <p>이 기간({from} ~ {to})에 시작한 실행 기록이 없습니다.</p>
+        ) : (
+          <div className="table-wrap">
+            <table className="weeks daily">
+              <thead>
+                <tr><th>날짜</th><th>그날의 실행 기록 (시작~끝 · 실제 분 · 할 일)</th><th>하루 실제 공부 시간</th></tr>
+              </thead>
+              <tbody>
+                {daily.days.map((d) => (
+                  <tr key={d.date}>
+                    <th scope="row">{d.date.slice(5)} ({kstWeekday(d.date)})</th>
+                    <td>
+                      <ul className="logs">
+                        {d.logs.map((l) => (
+                          <li key={l.id}>
+                            {hm(l.started_at)} ~ {hm(l.ended_at)} · {l.actual_minutes}분 · {todoLink(id, { id: l.todo_id, title: titleOf.get(l.todo_id) ?? '(지운 할 일)' })}
+                            {d.spikeLogs.includes(l.id) && <span className="spike"> 튀는 값 (한 건 {LOG_SPIKE_MIN}분 초과)</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td>
+                      <strong>{d.minutes}분</strong>
+                      {d.spikeDay && <span className="spike"> 튀는 값 (하루 {DAY_SPIKE_MIN}분 초과)</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th scope="row">{daily.days.length}일 합계</th>
+                  <td>{daily.days.map((d) => d.minutes).join(' + ')}</td>
+                  <td><strong>{daily.total}분</strong> <small>({fmtMinutes(daily.total)})</small></td>
+                </tr>
+                <tr>
+                  <th scope="row">{daily.days.length}일 평균</th>
+                  <td>{daily.total} ÷ {daily.days.length} = {daily.avgExact} → 소수 첫째 자리에서 반올림</td>
+                  <td><strong>{daily.avg}분</strong> <small>({fmtMinutes(daily.avg ?? 0)})</small></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
+        <p className="sort-note" role="note">
+          계산 기준: 하루는 서울 날짜이고 실행 기록의 <strong>시작 시각</strong>이 속한 날로 셉니다(자정을 넘겨도 시작한 날에 전부) ·
+          하루 값 = 그날 기록의 실제 분 합계 · 기록이 없는 날은 표에 없고 평균의 일수에도 세지 않습니다(0분으로 채우지 않음) ·
+          평균 = 합계 ÷ 기록이 있는 일수, 소수 첫째 자리에서 반올림(0.5는 올림) · 하루 {DAY_SPIKE_MIN}분 또는 기록 한 건 {LOG_SPIKE_MIN}분을 넘으면 "튀는 값"으로 표시만 하고 합계·평균에는 그대로 포함합니다 ·
+          같은 요청을 두 번 보내도 기록은 한 건만 남고, 서로 겹치는 두 기록은 자동으로 빼지 않으니 직접 지웁니다 · 주는 월요일에 시작합니다.
+        </p>
+      </section>
 
       <h2>주별 비교</h2>
       <div className="table-wrap">
@@ -206,6 +270,10 @@ async function Review({ params, searchParams }: Props) {
               고칠 점 (한 줄, 100자 이하)
               <input name="takeaway" required maxLength={100} placeholder="예) 코드 해석 문제는 예상 시간을 1.5배로 잡는다" />
             </label>
+            <label>
+              이유 (왜 바꾸나, 한 줄, 200자 이하)
+              <input name="reason" required maxLength={200} placeholder="예) 점심 뒤에 집중이 떨어져 오후 기록이 짧았다" />
+            </label>
             <div className="row">
               <label>
                 다음 계획 마감일
@@ -238,6 +306,13 @@ async function Review({ params, searchParams }: Props) {
               return (
                 <li key={r.id}>
                   <strong>{r.takeaway}</strong>
+                  <span>정한 시각 {kst(r.created_at)} (서울){r.snapshot.reason ? ` · 이유: ${r.snapshot.reason}` : ''}</span>
+                  {r.snapshot.daily && (
+                    <span>
+                      가리키는 실행 기록: {r.snapshot.daily.days.map((d) => `${d.date.slice(5)} ${d.minutes}분(기록 ${d.log_ids.length}건)`).join(', ')}
+                      {' '}→ {r.snapshot.daily.day_count}일 합계 {r.snapshot.daily.total_minutes}분 · 평균 {r.snapshot.daily.avg_minutes ?? '—'}분
+                    </span>
+                  )}
                   <span>돌아본 기간 {r.period_from} ~ {r.period_to} · 그때 숫자: 계획 {r.snapshot.planned} · 완료 {r.snapshot.done} · 지연 {r.snapshot.late} · 막힘 {r.snapshot.blocked} · 예상 {fmtMinutes(r.snapshot.estMinutes)} · 실제 {fmtMinutes(r.snapshot.actualMinutes)}</span>
                   <span>
                     → 다음 계획: {t ? <a href={`/plans/${id}#todo-${t.id}`}>{t.title}</a> : '(할 일이 지워졌습니다)'}

@@ -325,3 +325,12 @@ main.auth {
 .hero .notice { margin: 0 0 12px; }
 .plan-card { border-left: 5px solid var(--accent); }
 .list li:hover { box-shadow: 0 2px 4px rgba(23, 32, 51, 0.06), 0 12px 28px rgba(59, 91, 219, 0.14); }
+
+/* ───────── 하루 실제 공부 시간 표 (카드 5) ───────── */
+.spike { color: var(--err); font-weight: 700; font-size: 0.82rem; }
+table.daily td ul.logs { margin: 0; padding-left: 1.1em; }
+table.daily tfoot th, table.daily tfoot td { border-top: 2px solid var(--line); background: var(--accent-soft); }
+.userbar-link { background: rgba(255, 255, 255, 0.18); border-radius: 999px; padding: 3px 12px; color: #fff; text-decoration: none; overflow-wrap: anywhere; }
+.userbar-link:hover { background: rgba(255, 255, 255, 0.3); }
+label.check { display: flex; align-items: flex-start; gap: 8px; font-weight: 400; color: var(--fg); }
+label.check input { width: auto; margin-top: 4px; }

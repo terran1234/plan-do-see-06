@@ -123,3 +123,50 @@ export function fmtDiff(m: number) {
   if (m === 0) return '0분'
   return (m > 0 ? '+' : '') + fmtMinutes(m)
 }
+
+// ───────────── 하루 실제 공부 시간 (카드 5) ─────────────
+// 지표: 하루 실제 공부 시간, 단위: 분. "하루"는 서울(Asia/Seoul) 달력 날짜이고, 실행 기록의 "시작 시각"이 속한 날짜로 센다.
+// 그날의 값 = 그날 시작한 실행 기록의 actual_minutes 합계. 기록이 없는 날은 표에 나오지 않고 평균의 일수에도 세지 않는다.
+// 평균 = 합계 ÷ 기록이 있는 일수, 소수 첫째 자리에서 반올림(0.5 는 올림)한 정수 분.
+export const DAY_SPIKE_MIN = 600 // 하루 합계가 이보다 크면 "튀는 값" 표시 (제외하지는 않는다)
+export const LOG_SPIKE_MIN = 360 // 기록 한 건이 이보다 크면 "튀는 값" 표시 (제외하지는 않는다)
+
+export function kstDate(iso: string) {
+  return new Date(iso).toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' })
+}
+
+export function kstWeekday(date: string) {
+  return ['일', '월', '화', '수', '목', '금', '토'][new Date(`${date}T00:00:00Z`).getUTCDay()]
+}
+
+export type DayRow = {
+  date: string
+  logs: ReviewLog[]
+  minutes: number
+  spikeDay: boolean
+  spikeLogs: string[] // 튀는 기록의 id
+}
+
+export function dailyMinutes(logs: ReviewLog[], from: string, to: string) {
+  const byDate = new Map<string, ReviewLog[]>()
+  for (const l of logs) {
+    const d = kstDate(l.started_at)
+    if (d >= from && d <= to) byDate.set(d, [...(byDate.get(d) ?? []), l])
+  }
+  const days: DayRow[] = [...byDate.entries()]
+    .sort(([a], [b]) => (a < b ? -1 : 1))
+    .map(([date, list]) => {
+      const sorted = [...list].sort((a, b) => (a.started_at < b.started_at ? -1 : 1))
+      const minutes = sorted.reduce((s, l) => s + l.actual_minutes, 0)
+      return {
+        date,
+        logs: sorted,
+        minutes,
+        spikeDay: minutes > DAY_SPIKE_MIN,
+        spikeLogs: sorted.filter((l) => l.actual_minutes > LOG_SPIKE_MIN).map((l) => l.id),
+      }
+    })
+  const total = days.reduce((s, d) => s + d.minutes, 0)
+  const exact = days.length === 0 ? null : total / days.length
+  return { days, total, avgExact: exact, avg: exact === null ? null : Math.round(exact) }
+}

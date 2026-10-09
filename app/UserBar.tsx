@@ -7,7 +7,7 @@ export default async function UserBar() {
   if (!user) return null
   return (
     <form action={logout} className="userbar">
-      <span>{user.email}</span>
+      <a href="/account" className="userbar-link" title="내 계정 · 자료 내보내기 · 계정 삭제">{user.email}</a>
       <button type="submit" className="btn-secondary">로그아웃</button>
     </form>
   )
