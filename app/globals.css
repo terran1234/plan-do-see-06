@@ -370,3 +370,15 @@ label.check input { width: auto; margin-top: 4px; }
 .chip-time { background: var(--warn-bg); color: var(--warn-fg); border-color: var(--warn-line); font-weight: 700; }
 button.btn-done { background: var(--ok); color: #fff; }
 .todo.done { opacity: 0.88; }
+
+/* ───────── 돌아보기: 날짜와 공부 시간을 나란히 ───────── */
+.bar.thin { height: 8px; margin-top: 6px; min-width: 120px; }
+table.daily td.mins { text-align: left; white-space: normal; min-width: 180px; }
+table.daily td.logcell { text-align: left; white-space: normal; color: var(--muted); font-size: 0.86rem; }
+table.daily td.logcell ul.logs { margin: 0; padding-left: 1.1em; }
+table.daily tfoot td { text-align: left; white-space: normal; }
+table.daily td strong { font-size: 1.1rem; }
+ul.rules { margin: 8px 0 12px; padding-left: 1.2em; color: var(--muted); font-size: 0.9rem; }
+ul.rules li { margin: 4px 0; }
+table.daily thead th { text-align: left; }
+table.daily tbody th, table.daily tfoot th { text-align: left; white-space: nowrap; }
