@@ -1,7 +1,8 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { db, type Plan, type PlanRevision } from '@/lib/db'
+import { db, type PlanRevision } from '@/lib/db'
+import { requireOwnedPlan } from '@/lib/ownership'
 import { updatePlan } from '@/app/actions'
 import PlanForm from '@/app/PlanForm'
 import PublicNotice from '@/app/PublicNotice'
@@ -30,10 +31,7 @@ async function Todos({ params, searchParams }: Props) {
 async function PlanHeader({ params, searchParams }: Props) {
   const { id } = await params
   const { saved } = await searchParams
-  if (!/^[0-9a-f-]{36}$/i.test(id)) notFound()
-  const { data } = await db().from('plans').select('*').eq('id', id).maybeSingle()
-  if (!data) notFound()
-  const plan = data as Plan
+  const { plan } = await requireOwnedPlan(id)
   return (
     <>
       <h1>{plan.title}</h1>
@@ -51,21 +49,19 @@ async function PlanHeader({ params, searchParams }: Props) {
 async function PlanEditor({ params, searchParams }: Props) {
   const { id } = await params
   const { error } = await searchParams
-  if (!/^[0-9a-f-]{36}$/i.test(id)) notFound()
-
-  const supabase = db()
-  const [{ data: plan }, { data: revs }] = await Promise.all([
-    supabase.from('plans').select('*').eq('id', id).maybeSingle(),
-    supabase.from('plan_revisions').select('*').eq('plan_id', id).order('revision_no', { ascending: false }),
-  ])
-  if (!plan) notFound()
+  const { plan } = await requireOwnedPlan(id)
+  const { data: revs } = await db()
+    .from('plan_revisions')
+    .select('*')
+    .eq('plan_id', id)
+    .order('revision_no', { ascending: false })
   const revisions = (revs ?? []) as PlanRevision[]
 
   return (
     <section id="plan-edit">
       <h2>계획 고치기</h2>
       {error && <p className="error" role="alert">{error}</p>}
-      <PlanForm action={updatePlan} plan={plan as Plan} submitLabel="고쳐서 저장" />
+      <PlanForm action={updatePlan} plan={plan} submitLabel="고쳐서 저장" />
 
       <h2>수정 이력 ({revisions.length}개 버전)</h2>
       <p>고쳐도 이전 버전은 그대로 남습니다. 가장 아래 v1이 처음 세운 계획입니다.</p>
@@ -92,6 +88,9 @@ async function PlanEditor({ params, searchParams }: Props) {
   )
 }
 
+// 남의 계획 주소는 proxy.ts 가 화면을 그리기 전에 404 로 막는다(HTTP 상태까지 404).
+// 아래 <Suspense> 안의 각 조각도 requireOwnedPlan 으로 한 번 더 확인한다. (<Suspense> 안에서만 확인하면 내용은 숨겨져도
+// 상태가 이미 200 으로 나간 뒤라서, 상태 코드는 proxy 가 맡는다.)
 export default function PlanPage(props: Props) {
   return (
     <main>

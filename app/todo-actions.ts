@@ -3,6 +3,10 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
+import { requireOwnedPlan, requireOwnedTodo } from '@/lib/ownership'
+
+// 모든 액션은 저장·수정·삭제하기 전에 requireOwnedPlan / requireOwnedTodo 로 "내 것인가"를 확인한다.
+// 남의 것이면 아무것도 바꾸지 않고 404 로 끝난다.
 
 const UUID = /^[0-9a-f-]{36}$/i
 const PRIORITIES = ['높음', '보통', '낮음']
@@ -65,6 +69,7 @@ function todoIdOf(formData: FormData, planId: string) {
 
 export async function createTodo(formData: FormData) {
   const planId = planIdOf(formData)
+  await requireOwnedPlan(planId)
   const parsed = parseTodo(formData)
   if (parsed.value === undefined) fail(planId, parsed.error)
 
@@ -76,6 +81,7 @@ export async function createTodo(formData: FormData) {
 export async function updateTodo(formData: FormData) {
   const planId = planIdOf(formData)
   const id = todoIdOf(formData, planId)
+  await requireOwnedTodo(planId, id)
   const parsed = parseTodo(formData)
   if (parsed.value === undefined) fail(planId, parsed.error)
 
@@ -94,6 +100,7 @@ export async function updateTodo(formData: FormData) {
 export async function setTodoStatus(formData: FormData) {
   const planId = planIdOf(formData)
   const id = todoIdOf(formData, planId)
+  await requireOwnedTodo(planId, id)
   const done = String(formData.get('status')) === '완료'
   const key = String(formData.get('request_key') ?? '')
   if (done && !UUID.test(key)) fail(planId, '잘못된 요청입니다. 새로고침 후 다시 시도하세요.')
@@ -121,6 +128,7 @@ export async function createLog(formData: FormData) {
   const todoId = String(formData.get('todo_id') ?? '')
   const key = String(formData.get('request_key') ?? '')
   if (!UUID.test(todoId) || !UUID.test(key)) fail(planId, '잘못된 요청입니다. 새로고침 후 다시 시도하세요.')
+  await requireOwnedTodo(planId, todoId)
 
   const started = parseKst(formData.get('started_at'))
   const ended = parseKst(formData.get('ended_at'))
@@ -161,6 +169,7 @@ export async function deleteLog(formData: FormData) {
   const logId = String(formData.get('log_id') ?? '')
   const todoId = String(formData.get('todo_id') ?? '')
   if (!UUID.test(logId) || !UUID.test(todoId)) fail(planId, '잘못된 요청입니다.')
+  await requireOwnedTodo(planId, todoId)
 
   const { error } = await db().from('execution_logs').delete().eq('id', logId).eq('todo_id', todoId)
   if (error) fail(planId, '실행 기록을 지우지 못했습니다.')
@@ -170,6 +179,7 @@ export async function deleteLog(formData: FormData) {
 export async function deleteTodo(formData: FormData) {
   const planId = planIdOf(formData)
   const id = todoIdOf(formData, planId)
+  await requireOwnedTodo(planId, id)
 
   const { error } = await db().from('todos').delete().eq('id', id).eq('plan_id', planId)
   if (error) fail(planId, '할 일을 지우지 못했습니다.')

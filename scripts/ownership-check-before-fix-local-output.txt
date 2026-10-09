@@ -1,0 +1,89 @@
+﻿=== 카드 4 소유자 확인 (2026. 10. 9. 오후 1:54:31) ===
+앱: http://localhost:3109
+A = a@mock.test (계정 번호 11111111…)   B = b@mock.test (계정 번호 22222222…)
+A 토큰 eyJhb…생략   B 토큰 eyJhb…생략   (비밀번호는 기록하지 않음)
+
+━━ 준비: 두 계정에 자료 넣기 (이미 있으면 그대로 둠) ━━
+  A (a@mock.test): 계획 2 · 할 일 1 · 실행 기록 1 · 완료 기록 0 · 돌아보기 0 · 수정 이력 2
+     대상 계획 7b3ac652… "[검증] A의 계획 1" · 할 일 6923a2db… · 실행 기록 aa62b849…
+  B (b@mock.test): 계획 2 · 할 일 1 · 실행 기록 1 · 완료 기록 0 · 돌아보기 0 · 수정 이력 2
+     대상 계획 2518c655… "[검증] B의 계획 1" · 할 일 98ef74a5… · 실행 기록 5ab1f266…
+
+━━ A (a@mock.test) 이(가) B (b@mock.test) 의 자료를 건드려 본다 ━━
+  대상: 계획 2518c655… · 할 일 98ef74a5… · 실행 기록 5ab1f266…   (쿠키: sb-127-auth-token=base6…생략)
+
+  ▸ 읽기
+  ✘ [읽기] GET /plans/2518c655… → 200  ⚠ 응답에 남의 자료가 있음: [검증] B의 계획 1
+  ✘ [읽기] GET /plans/2518c655…/review → 200  ⚠ 응답에 남의 자료가 있음: [검증] B의 계획 1
+
+  ▸ 수정 (폼 값에 남의 계획·할 일 번호를 적어 보냄)
+  ✘ [수정] 계획 고치기   id=2518c655… title="[침입] 남의 자료를 바꾸려는 시도" → 303 → /plans/2518c655-1b94-42cd-8745-0ea67b6d0bb9?saved=1
+  ✘ [수정] 할 일 고치기   plan_id=2518c655… id=98ef74a5… → 303 → /plans/2518c655-1b94-42cd-8745-0ea67b6d0bb9?todo=%ED%95%A0%20%EC%9D%BC%EC%9D%84%20%EA%B3%A0%EC%B3%A4%EC%8A%B5%EB%8B%88%EB%8B%A4.#todos
+  ✘ [수정] 완료로 바꾸기   plan_id=2518c655… id=98ef74a5… status=완료 → 303 → /plans/2518c655-1b94-42cd-8745-0ea67b6d0bb9?todo=%EC%99%84%EB%A3%8C%EB%A1%9C%20%EB%B0%94%EA%BF%A8%EC%8A%B5%EB%8B%88%EB%8B%A4.#todos
+  ✘ [수정] 할 일 추가     plan_id=2518c655… title="[침입] 남의 자료를 바꾸려는 시도" → 303 → /plans/2518c655-1b94-42cd-8745-0ea67b6d0bb9?todo=%ED%95%A0%20%EC%9D%BC%EC%9D%84%20%EB%A7%8C%EB%93%A4%EC%97%88%EC%8A%B5%EB%8B%88%EB%8B%A4.#todos
+  ✘ [수정] 실행 기록 추가 plan_id=2518c655… todo_id=98ef74a5… → 303 → /plans/2518c655-1b94-42cd-8745-0ea67b6d0bb9?todo=%EC%8B%A4%ED%96%89%20%EA%B8%B0%EB%A1%9D%EC%9D%84%20%EB%82%A8%EA%B2%BC%EC%8A%B5%EB%8B%88%EB%8B%A4.#todos
+  ✘ [수정] 돌아보기 넘기기 plan_id=2518c655… → 303 → /plans/2518c655-1b94-42cd-8745-0ea67b6d0bb9/review?from=2026-10-07&to=2026-10-25&error=%EB%8B%A4%EC%9D%8C+%EA%B3%84%ED%9A%8D%EC%9C%BC%EB%A1%9C+%EB%84%98%EA%B8%B0%EC%A7%80+%EB%AA%BB%ED%96%88%EC%8A%B5%EB%8B%88%EB%8B%A4.#next
+
+  ▸ 삭제
+  ✘ [삭제] 실행 기록 삭제 plan_id=2518c655… todo_id=98ef74a5… log_id=5ab1f266… → 303 → /plans/2518c655-1b94-42cd-8745-0ea67b6d0bb9?todo=%EC%8B%A4%ED%96%89%20%EA%B8%B0%EB%A1%9D%EC%9D%84%20%EC%A7%80%EC%9B%A0%EC%8A%B5%EB%8B%88%EB%8B%A4.#todos
+  ✘ [삭제] 할 일 삭제     plan_id=2518c655… id=98ef74a5… → 303 → /plans/2518c655-1b94-42cd-8745-0ea67b6d0bb9?todo=%ED%95%A0%20%EC%9D%BC%EC%9D%84%20%EC%A7%80%EC%9B%A0%EC%8A%B5%EB%8B%88%EB%8B%A4.#todos
+
+  ▸ 주소·헤더·본문에 남의 계정을 적어 보내기
+  ✔ [주소] GET /?user_id=22222222… → 200   목록의 계획 2개 모두 내 것: true   B의 번호가 응답에 있음: false
+  ✔ [헤더] GET /api/export?user_id=22222222… + 헤더 X-User-Id/X-Supabase-User-Id/X-Forwarded-User → 200   계획 2개, 모두 내 소유: true, B의 번호가 응답에 있음: false
+    (본문에 user_id=22222222… owner=b@mock.test 를 함께 적어 계획 만들기 → 303)
+  ✔ [본문] 새 계획의 주인(user_id) = 11111111…   내 계정(11111111…)과 같음: true   B의 계획 수 2 → 2
+
+  ▸ 거절 앞뒤로 B 의 자료 (내 계정으로 로그인해 읽은 내보내기)
+    앞: 계획 2 · 할 일 1 · 실행 기록 1 · 완료 기록 0 · 돌아보기 0 · 수정 이력 2   내용 지문 32aed8dc8b7a
+    뒤: 계획 2 · 할 일 2 · 실행 기록 0 · 완료 기록 0 · 돌아보기 1 · 수정 이력 3   내용 지문 6edf26e40a38
+  ✘ [건수] 앞뒤 건수와 내용이 같음: false   '[침입]' 자료가 새로 생김: true
+    (참고) A 의 자료: 앞 계획 2개 → 뒤 3개 (본문 시험으로 내 계정에 1개가 생긴 것만 다름)
+
+  ▸ A 의 목록·내보내기에 B 의 자료가 섞였나
+  ✔ [목록] 목록 화면과 내보내기 응답 전체에서 B 의 번호 4개 중 0개 발견, 제목 발견: false
+
+━━ B (b@mock.test) 이(가) A (a@mock.test) 의 자료를 건드려 본다 ━━
+  대상: 계획 7b3ac652… · 할 일 6923a2db… · 실행 기록 aa62b849…   (쿠키: sb-127-auth-token=base6…생략)
+
+  ▸ 읽기
+  ✘ [읽기] GET /plans/7b3ac652… → 200  ⚠ 응답에 남의 자료가 있음: [검증] A의 계획 1
+  ✘ [읽기] GET /plans/7b3ac652…/review → 200  ⚠ 응답에 남의 자료가 있음: [검증] A의 계획 1
+
+  ▸ 수정 (폼 값에 남의 계획·할 일 번호를 적어 보냄)
+  ✘ [수정] 계획 고치기   id=7b3ac652… title="[침입] 남의 자료를 바꾸려는 시도" → 303 → /plans/7b3ac652-5770-4204-a825-e5464c57ac48?saved=1
+  ✘ [수정] 할 일 고치기   plan_id=7b3ac652… id=6923a2db… → 303 → /plans/7b3ac652-5770-4204-a825-e5464c57ac48?todo=%ED%95%A0%20%EC%9D%BC%EC%9D%84%20%EA%B3%A0%EC%B3%A4%EC%8A%B5%EB%8B%88%EB%8B%A4.#todos
+  ✘ [수정] 완료로 바꾸기   plan_id=7b3ac652… id=6923a2db… status=완료 → 303 → /plans/7b3ac652-5770-4204-a825-e5464c57ac48?todo=%EC%99%84%EB%A3%8C%EB%A1%9C%20%EB%B0%94%EA%BF%A8%EC%8A%B5%EB%8B%88%EB%8B%A4.#todos
+  ✘ [수정] 할 일 추가     plan_id=7b3ac652… title="[침입] 남의 자료를 바꾸려는 시도" → 303 → /plans/7b3ac652-5770-4204-a825-e5464c57ac48?todo=%ED%95%A0%20%EC%9D%BC%EC%9D%84%20%EB%A7%8C%EB%93%A4%EC%97%88%EC%8A%B5%EB%8B%88%EB%8B%A4.#todos
+  ✘ [수정] 실행 기록 추가 plan_id=7b3ac652… todo_id=6923a2db… → 303 → /plans/7b3ac652-5770-4204-a825-e5464c57ac48?todo=%EC%8B%A4%ED%96%89%20%EA%B8%B0%EB%A1%9D%EC%9D%84%20%EB%82%A8%EA%B2%BC%EC%8A%B5%EB%8B%88%EB%8B%A4.#todos
+  ✘ [수정] 돌아보기 넘기기 plan_id=7b3ac652… → 303 → /plans/7b3ac652-5770-4204-a825-e5464c57ac48/review?from=2026-10-07&to=2026-10-25&error=%EB%8B%A4%EC%9D%8C+%EA%B3%84%ED%9A%8D%EC%9C%BC%EB%A1%9C+%EB%84%98%EA%B8%B0%EC%A7%80+%EB%AA%BB%ED%96%88%EC%8A%B5%EB%8B%88%EB%8B%A4.#next
+
+  ▸ 삭제
+  ✘ [삭제] 실행 기록 삭제 plan_id=7b3ac652… todo_id=6923a2db… log_id=aa62b849… → 303 → /plans/7b3ac652-5770-4204-a825-e5464c57ac48?todo=%EC%8B%A4%ED%96%89%20%EA%B8%B0%EB%A1%9D%EC%9D%84%20%EC%A7%80%EC%9B%A0%EC%8A%B5%EB%8B%88%EB%8B%A4.#todos
+  ✘ [삭제] 할 일 삭제     plan_id=7b3ac652… id=6923a2db… → 303 → /plans/7b3ac652-5770-4204-a825-e5464c57ac48?todo=%ED%95%A0%20%EC%9D%BC%EC%9D%84%20%EC%A7%80%EC%9B%A0%EC%8A%B5%EB%8B%88%EB%8B%A4.#todos
+
+  ▸ 주소·헤더·본문에 남의 계정을 적어 보내기
+  ✔ [주소] GET /?user_id=11111111… → 200   목록의 계획 2개 모두 내 것: true   A의 번호가 응답에 있음: false
+  ✔ [헤더] GET /api/export?user_id=11111111… + 헤더 X-User-Id/X-Supabase-User-Id/X-Forwarded-User → 200   계획 2개, 모두 내 소유: true, A의 번호가 응답에 있음: false
+    (본문에 user_id=11111111… owner=a@mock.test 를 함께 적어 계획 만들기 → 303)
+  ✔ [본문] 새 계획의 주인(user_id) = 22222222…   내 계정(22222222…)과 같음: true   A의 계획 수 3 → 3
+
+  ▸ 거절 앞뒤로 A 의 자료 (내 계정으로 로그인해 읽은 내보내기)
+    앞: 계획 3 · 할 일 1 · 실행 기록 1 · 완료 기록 0 · 돌아보기 0 · 수정 이력 3   내용 지문 56edb32b8490
+    뒤: 계획 3 · 할 일 2 · 실행 기록 0 · 완료 기록 0 · 돌아보기 1 · 수정 이력 4   내용 지문 581dbfb7d92d
+  ✘ [건수] 앞뒤 건수와 내용이 같음: false   '[침입]' 자료가 새로 생김: true
+    (참고) B 의 자료: 앞 계획 2개 → 뒤 3개 (본문 시험으로 내 계정에 1개가 생긴 것만 다름)
+
+  ▸ B 의 목록·내보내기에 A 의 자료가 섞였나
+  ✔ [목록] 목록 화면과 내보내기 응답 전체에서 A 의 번호 4개 중 0개 발견, 제목 발견: false
+
+━━ 로그인하지 않고(쿠키 없이) 직접 요청 ━━
+  ✔ [비로그인] GET /plans/7b3ac652… → 307 → /login
+  ✔ [비로그인] GET /plans/7b3ac652…/review → 307 → /login
+  ✔ [비로그인] GET /api/export → 401
+  ✔ [비로그인] GET / → 307 → /login
+  ✔ [비로그인] POST 계획 고치기 id=7b3ac652… (서버 액션) → 307 → /login
+  ✔ [비로그인] 시도 뒤 두 계정에 '[침입] 로그인 없이' 자료가 생기지 않음: true
+
+요약: 시험 36건 중 통과 14건, 실패 22건   → 남의 자료가 막힘: false
+(두 계정은 확인을 마치고 로그아웃했습니다. 비밀번호와 토큰 원문은 기록하지 않았습니다.)

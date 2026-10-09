@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { requireUser } from '@/lib/auth'
+import { requireOwnedPlan } from '@/lib/ownership'
 
 const PRIORITIES = ['높음', '보통', '낮음']
 
@@ -53,10 +54,14 @@ export async function updatePlan(formData: FormData) {
   const id = String(formData.get('id') ?? '')
   if (!/^[0-9a-f-]{36}$/i.test(id)) redirect('/')
 
+  // 내 계획인지 먼저 확인한다. 남의 계획이면 아무것도 저장하지 않고 404.
+  const { user } = await requireOwnedPlan(id)
+
   const parsed = parsePlan(formData)
   if (parsed.value === undefined) redirect(`/plans/${id}?error=${encodeURIComponent(parsed.error)}`)
 
-  const { error } = await db().from('plans').update(parsed.value).eq('id', id)
+  // 확인 뒤에도 조건에 주인(user_id)을 한 번 더 건다.
+  const { error } = await db().from('plans').update(parsed.value).eq('id', id).eq('user_id', user.id)
   if (error) redirect(`/plans/${id}?error=${encodeURIComponent('수정에 실패했습니다.')}`)
 
   revalidatePath('/')

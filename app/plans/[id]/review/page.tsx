@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import { db, type Plan, type Todo, type ExecutionLog } from '@/lib/db'
+import { db, type Todo, type ExecutionLog } from '@/lib/db'
+import { requireOwnedPlan } from '@/lib/ownership'
 import { analyze, addDays, fmtDiff, fmtMinutes, isDate, todayKst, weekRanges, type Metrics, type ReviewLog } from '@/lib/review'
 import { carryReview } from '@/app/review-actions'
 import PublicNotice from '@/app/PublicNotice'
@@ -49,16 +49,13 @@ function kst(iso: string) {
 async function Review({ params, searchParams }: Props) {
   const { id } = await params
   const sp = await searchParams
-  if (!/^[0-9a-f-]{36}$/i.test(id)) notFound()
+  const { plan } = await requireOwnedPlan(id)
 
   const supabase = db()
-  const [{ data: planRow }, { data: todoRows }, { data: reviewRows }] = await Promise.all([
-    supabase.from('plans').select('*').eq('id', id).maybeSingle(),
+  const [{ data: todoRows }, { data: reviewRows }] = await Promise.all([
     supabase.from('todos').select('*').eq('plan_id', id),
     supabase.from('reviews').select('*').eq('plan_id', id).order('created_at', { ascending: false }),
   ])
-  if (!planRow) notFound()
-  const plan = planRow as Plan
   const todos = (todoRows ?? []) as Todo[]
   const ids = todos.map((t) => t.id)
   const { data: logRows } = ids.length
@@ -299,6 +296,7 @@ function TodoList({
   )
 }
 
+// 남의 계획 주소는 proxy.ts 가 화면을 그리기 전에 404 로 막는다. 아래 Review 도 requireOwnedPlan 으로 한 번 더 확인한다.
 export default function ReviewPage(props: Props) {
   return (
     <main>

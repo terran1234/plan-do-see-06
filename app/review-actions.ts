@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { db, type Todo, type ExecutionLog } from '@/lib/db'
 import { analyze, isDate, todayKst } from '@/lib/review'
+import { requireOwnedPlan } from '@/lib/ownership'
 
 const UUID = /^[0-9a-f-]{36}$/i
 const PRIORITIES = ['높음', '보통', '낮음']
@@ -31,9 +32,8 @@ export async function carryReview(formData: FormData) {
   if (!Number.isFinite(hours) || hours <= 0 || hours > 999) back(planId, from, to, { error: '예상 시간은 0보다 큰 숫자로 입력하세요.' })
 
   // 그 시점의 집계 숫자는 폼 값이 아니라 DB에서 다시 계산해 남긴다 (화면 값을 믿지 않는다).
+  await requireOwnedPlan(planId) // 내 계획이 아니면 아무것도 저장하지 않고 404
   const supabase = db()
-  const { data: plan } = await supabase.from('plans').select('id').eq('id', planId).maybeSingle()
-  if (!plan) redirect('/')
   const { data: todoRows } = await supabase.from('todos').select('*').eq('plan_id', planId)
   const todos = (todoRows ?? []) as Todo[]
   const ids = todos.map((t) => t.id)

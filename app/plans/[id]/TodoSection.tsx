@@ -1,4 +1,5 @@
 import { db, type Todo, type ExecutionLog, type Completion } from '@/lib/db'
+import { requireOwnedPlan } from '@/lib/ownership'
 import { applyTodoQuery, SORTS, TIE_BREAK } from '@/lib/todo-view'
 import {
   createTodo,
@@ -199,6 +200,7 @@ export default async function TodoSection({
   searchParams: Promise<TodoSearchParams>
 }) {
   const sp = await searchParams
+  await requireOwnedPlan(planId) // 내 계획의 할 일만 읽는다
   const supabase = db()
   const { data, error } = await supabase.from('todos').select('*').eq('plan_id', planId)
   const all = (data ?? []) as Todo[]
