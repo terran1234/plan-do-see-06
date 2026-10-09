@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
+import { requireUser } from '@/lib/auth'
 
 const PRIORITIES = ['높음', '보통', '낮음']
 
@@ -37,10 +38,11 @@ function parsePlan(formData: FormData): Parsed {
 }
 
 export async function createPlan(formData: FormData) {
+  const user = await requireUser()
   const parsed = parsePlan(formData)
   if (parsed.value === undefined) redirect(`/?error=${encodeURIComponent(parsed.error)}`)
 
-  const { data, error } = await db().from('plans').insert(parsed.value).select('id').single()
+  const { data, error } = await db().from('plans').insert({ ...parsed.value, user_id: user.id }).select('id').single()
   if (error || !data) redirect(`/?error=${encodeURIComponent('저장에 실패했습니다.')}`)
 
   revalidatePath('/')

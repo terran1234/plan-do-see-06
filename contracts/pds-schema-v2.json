@@ -33,6 +33,7 @@
       "primary_key": ["id"],
       "columns": {
         "id": { "type": "uuid", "nullable": false, "default": "gen_random_uuid()" },
+        "user_id": { "type": "uuid", "nullable": false, "references": "auth.users.id", "on_delete": "cascade", "meaning": "이 계획의 주인(로그인한 사용자)" },
         "title": { "type": "text", "nullable": false },
         "start_date": { "type": "date", "nullable": false },
         "end_date": { "type": "date", "nullable": false },

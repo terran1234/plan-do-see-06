@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { db, type Plan } from '@/lib/db'
+import { requireUser } from '@/lib/auth'
 import { createPlan } from './actions'
 import PlanForm from './PlanForm'
 import PublicNotice from './PublicNotice'
@@ -8,9 +9,11 @@ import PublicNotice from './PublicNotice'
 type SearchParams = Promise<{ error?: string }>
 
 async function PlanList() {
+  const user = await requireUser()
   const { data, error } = await db()
     .from('plans')
     .select('*')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
   const plans = (data ?? []) as Plan[]
 

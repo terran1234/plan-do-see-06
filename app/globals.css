@@ -250,3 +250,10 @@ summary { cursor: pointer; color: var(--accent); font-weight: 600; padding: 2px 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+/* ───────── 로그인·가입 ───────── */
+.userbar { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
+.userbar span { opacity: 0.92; overflow-wrap: anywhere; }
+.userbar button { padding: 5px 12px; font-size: 0.85rem; }
+.auth-switch { color: var(--muted); font-size: 0.92rem; }
+main > .form { max-width: 420px; }

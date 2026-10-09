@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
+import UserBar from "./UserBar";
 
 export const metadata: Metadata = {
   title: "플랜두씨 다이어리",
@@ -16,6 +18,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <p className="tagline" aria-label="계획, 실제로 한 일, 돌아보기">
               <span>Plan 계획</span>→<span>Do 실행</span>→<span>See 돌아보기</span>
             </p>
+            <Suspense>
+              <UserBar />
+            </Suspense>
           </div>
         </header>
         {children}

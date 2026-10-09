@@ -224,3 +224,10 @@ grant select, insert, update, delete on reviews to service_role;
 revoke all on reviews from anon, authenticated;
 revoke execute on function carry_review(uuid, date, date, text, jsonb, date, text, numeric) from public, anon, authenticated;
 grant execute on function carry_review(uuid, date, date, text, jsonb, date, text, numeric) to service_role;
+
+-- ============ 7번 과제 카드 1: 계획의 주인(로그인한 사용자) ============
+-- 로그인은 Supabase Auth 가 맡는다. 비밀번호 해시와 사용자 표(auth.users)는 Supabase 가 관리한다.
+-- 6번에서 만든 기존 행이 있으므로 처음에는 비워 둘 수 있게(null) 추가하고,
+-- supabase/migrate-owner.sql 로 내 계정에 옮긴 뒤 not null 로 바꾼다.
+alter table plans add column if not exists user_id uuid references auth.users(id) on delete cascade;
+create index if not exists plans_user_id_idx on plans(user_id);

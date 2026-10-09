@@ -1,0 +1,41 @@
+import { Suspense } from 'react'
+import Link from 'next/link'
+import { login } from '@/app/auth-actions'
+
+type SearchParams = Promise<{ error?: string; notice?: string }>
+
+async function Messages({ searchParams }: { searchParams: SearchParams }) {
+  const { error, notice } = await searchParams
+  return (
+    <>
+      {error && <p className="error" role="alert">{error}</p>}
+      {notice === 'confirm' && (
+        <p className="ok" role="status">가입 확인 메일을 보냈습니다. 메일의 링크를 누른 뒤 로그인하세요.</p>
+      )}
+    </>
+  )
+}
+
+export default function LoginPage({ searchParams }: { searchParams: SearchParams }) {
+  return (
+    <main>
+      <h1>로그인</h1>
+      <p className="lead">내 계획과 기록은 로그인한 뒤에만 보입니다.</p>
+      <Suspense>
+        <Messages searchParams={searchParams} />
+      </Suspense>
+      <form action={login} className="form card">
+        <label>
+          이메일
+          <input type="email" name="email" required autoComplete="email" maxLength={254} />
+        </label>
+        <label>
+          비밀번호
+          <input type="password" name="password" required autoComplete="current-password" maxLength={72} />
+        </label>
+        <button type="submit">로그인</button>
+      </form>
+      <p className="auth-switch">처음이신가요? <Link href="/signup">가입하기</Link></p>
+    </main>
+  )
+}
