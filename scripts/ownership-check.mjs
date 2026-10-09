@@ -160,6 +160,13 @@ async function attack(att, vic) {
   // 응답에 있으면 안 되는 것: 남의 자료의 내용(제목). 번호(UUID)는 내가 주소에 적어 보낸 값이라 응답에 되돌아와도 자료 유출이 아니다.
   const hide = [planTitle]
 
+  // 대조: 똑같은 요청을 "내 자료"로 보내면 된다 (거절이 아무 요청이나 막는 것이 아니라 남의 것만 막는다는 증거)
+  const mine = att.target
+  say('\n  ▸ 대조: 같은 요청을 내 자료로 보내면 된다')
+  record('내 것', `GET /plans/${short(mine.planId)} (내 계획)`, await req(att.cookie.header, 'GET', `/plans/${mine.planId}`), { expect: [200] })
+  record('내 것', `GET /plans/${short(mine.planId)}/review (내 계획)`, await req(att.cookie.header, 'GET', `/plans/${mine.planId}/review`), { expect: [200] })
+  record('내 것', `할 일 고치기 plan_id=${short(mine.planId)} id=${short(mine.todoId)} (내 할 일)`, await submit(att, 'updateTodo', { plan_id: mine.planId, id: mine.todoId, title: `[검증] ${att.label}의 할 일`, due_date: '2026-10-10', priority: '보통', tags: '검증', estimated_hours: '1' }), { expect: [303] })
+
   say('\n  ▸ 읽기')
   record('읽기', `GET /plans/${short(P)}`, await req(att.cookie.header, 'GET', `/plans/${P}`), { notIn: hide })
   record('읽기', `GET /plans/${short(P)}/review`, await req(att.cookie.header, 'GET', `/plans/${P}/review`), { notIn: hide })
