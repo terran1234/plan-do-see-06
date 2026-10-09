@@ -1,6 +1,7 @@
 import { db, type Todo, type ExecutionLog, type Completion } from '@/lib/db'
 import { requireOwnedPlan } from '@/lib/ownership'
 import { applyTodoQuery, SORTS, TIE_BREAK } from '@/lib/todo-view'
+import { kstDate, todayKst } from '@/lib/review'
 import {
   createTodo,
   updateTodo,
@@ -38,6 +39,12 @@ function fmtMinutes(m: number) {
   return r === 0 ? `${h}시간` : `${h}시간 ${r}분`
 }
 
+// "8단원 Python (24문항)" → 번호 8, 이름 Python, 문항 24. 이 모양이 아니면 제목 전체를 이름으로 쓴다.
+function unitLabel(title: string) {
+  const m = title.match(/^(\d+)단원\s+(.+?)\s*(?:\((\d+)문항\))?$/)
+  return m ? { no: m[1], name: m[2], q: m[3] } : { no: '', name: title, q: undefined }
+}
+
 function TodoFields({ todo }: { todo?: Todo }) {
   return (
     <>
@@ -65,7 +72,7 @@ function TodoFields({ todo }: { todo?: Todo }) {
           <input name="tags" maxLength={120} defaultValue={todo?.tags.join(', ')} placeholder="예) SQL, 기출" />
         </label>
         <label>
-          예상 시간(시간)
+          예상 시간(시간) — 앱이 요구하는 칸이며 하루 공부 시간 지표에는 쓰지 않습니다
           <input type="number" name="estimated_hours" required min="0.5" step="0.5" defaultValue={todo?.estimated_hours} />
         </label>
       </div>
@@ -74,7 +81,7 @@ function TodoFields({ todo }: { todo?: Todo }) {
 }
 
 function LogList({ logs, todoId, planId }: { logs: ExecutionLog[]; todoId: string; planId: string }) {
-  if (logs.length === 0) return <p className="log-empty">아직 실행 기록이 없습니다.</p>
+  if (logs.length === 0) return <p className="log-empty">아직 공부 기록이 없습니다.</p>
   return (
     <ul className="logs">
       {logs.map((l) => (
@@ -102,12 +109,12 @@ function TodoItem({ todo, planId, logs }: { todo: Todo; planId: string; logs: Ex
     <li className={done ? 'todo done' : 'todo'} id={`todo-${todo.id}`} data-priority={todo.priority}>
       <div className="todo-head">
         <strong className="todo-title">{todo.title}</strong>
-        <span className={done ? 'badge badge-done' : 'badge'}>{done ? '✓ 완료' : todo.status}</span>
+        <span className={done ? 'badge badge-done' : 'badge'}>{done ? '✓ 완료' : actualMinutes > 0 ? '공부 중' : '시작 전'}</span>
       </div>
       <p className="todo-meta chips">
         <span className="chip">📅 마감 {todo.due_date}</span>
-        <span className="chip chip-prio" data-p={todo.priority}>우선순위 {todo.priority}</span>
-        <span className="chip">⏱ 예상 {todo.estimated_hours}시간</span>
+        {actualMinutes > 0 && <span className="chip chip-time">⏱ 공부 {fmtMinutes(actualMinutes)} · {logs.length}회</span>}
+        {todo.priority !== '보통' && <span className="chip chip-prio" data-p={todo.priority}>우선순위 {todo.priority}</span>}
         {todo.tags.map((t) => (
           <span className="chip chip-tag" key={t}>#{t}</span>
         ))}
@@ -121,7 +128,7 @@ function TodoItem({ todo, planId, logs }: { todo: Todo; planId: string; logs: Ex
           <input type="hidden" name="status" value={done ? '진행 중' : '완료'} />
           {/* 같은 화면에서 보낸 요청은 같은 키를 가진다. 두 번 눌러도 DB가 한 건만 받는다. */}
           <input type="hidden" name="request_key" value={crypto.randomUUID()} />
-          <button type="submit">{done ? '진행 중으로 되돌리기' : '완료로 바꾸기'}</button>
+          <button type="submit" className={done ? '' : 'btn-done'}>{done ? '진행 중으로 되돌리기' : '✓ 완료로 바꾸기'}</button>
         </form>
         <details>
           <summary>고치기</summary>
@@ -145,23 +152,12 @@ function TodoItem({ todo, planId, logs }: { todo: Todo; planId: string; logs: Ex
 
       <div className="log-box">
         <h4>
-          실행 기록 {logs.length}건
-          {logs.length > 0 && <> · 실제 합계 {fmtMinutes(actualMinutes)} (계획 예상 {todo.estimated_hours}시간)</>}
+          공부 기록 {logs.length}건
+          {logs.length > 0 && <> · 합계 {fmtMinutes(actualMinutes)}</>}
         </h4>
-        {logs.length > 0 && (
-          <div className="progress">
-            <div className="bar" role="img" aria-label={`예상 ${todo.estimated_hours}시간 중 실제 ${fmtMinutes(actualMinutes)}`}>
-              <span style={{ width: `${Math.min(100, Math.round((actualMinutes / (Number(todo.estimated_hours) * 60)) * 100))}%` }} />
-            </div>
-            <p className="bar-label">
-              <span>실제 {fmtMinutes(actualMinutes)}</span>
-              <span>예상 {todo.estimated_hours}시간 ({Math.round((actualMinutes / (Number(todo.estimated_hours) * 60)) * 100)}%)</span>
-            </p>
-          </div>
-        )}
         <LogList logs={logs} todoId={todo.id} planId={planId} />
         <details>
-          <summary>실행 기록 남기기</summary>
+          <summary>＋ 공부 기록 남기기</summary>
           <form action={createLog} className="form">
             <input type="hidden" name="plan_id" value={planId} />
             <input type="hidden" name="todo_id" value={todo.id} />
@@ -216,116 +212,160 @@ export default async function TodoSection({
   const openCompletions = (compRes.data ?? []) as Completion[]
   const logsByTodo = new Map<string, ExecutionLog[]>()
   for (const l of allLogs) logsByTodo.set(l.todo_id, [...(logsByTodo.get(l.todo_id) ?? []), l])
+  const minutesOf = (id: string) => (logsByTodo.get(id) ?? []).reduce((s, l) => s + l.actual_minutes, 0)
 
-  const { sorted, sortKey } = applyTodoQuery(all, sp)
+  // 상태는 아래에서 "남은 것 / 완료한 것"으로 나눠 보여 주므로 필터에서는 뺀다.
+  const { sorted, sortKey } = applyTodoQuery(all, { ...sp, status: 'all' })
+  const remaining = sorted.filter((t) => t.status !== '완료')
+  const finished = sorted.filter((t) => t.status === '완료')
+  const inUnitOrder = applyTodoQuery(all, {}).sorted // 타일은 항상 기본 순서(마감일 → 우선순위 → 만든 순)
   const allTags = [...new Set(all.flatMap((t) => t.tags))].sort((a, b) => a.localeCompare(b, 'ko'))
-  const doneCount = openCompletions.length // 돌아보기의 완료 수: 완료 기록 표에서 직접 센다
-  const plannedHours = all.reduce((s, t) => s + Number(t.estimated_hours), 0)
+
+  const doneCount = openCompletions.length // 완료 수: 완료 기록 표에서 직접 센다
+  const total = all.length
+  const pct = total === 0 ? 0 : Math.round((doneCount / total) * 100)
   const actualTotal = allLogs.reduce((s, l) => s + l.actual_minutes, 0)
-  const blockedCount = allLogs.filter((l) => l.blocked_reason).length
-  const filtering = Boolean(sp.q || (sp.status && sp.status !== 'all') || (sp.priority && sp.priority !== 'all') || (sp.tag && sp.tag !== 'all'))
+  const today = todayKst()
+  const todayMinutes = allLogs.filter((l) => kstDate(l.started_at) === today).reduce((s, l) => s + l.actual_minutes, 0)
+  const studyDays = [...new Set(allLogs.map((l) => kstDate(l.started_at)))].sort()
+  const filtering = Boolean(sp.q || (sp.priority && sp.priority !== 'all') || (sp.tag && sp.tag !== 'all'))
 
   return (
     <section id="todos">
-      <h2>할 일 ({all.length}개 · 완료 {doneCount}개)</h2>
+      <h2>한눈에 보기</h2>
 
-      <p>
-        <a className="export-link" href={`/plans/${planId}/review`}>📊 돌아보기 화면으로 — 지연·막힘·예상 대비 실제 시간, 다음 계획으로 넘기기</a>
-      </p>
-      <div className="summary" aria-label="돌아보기 요약">
-        <div>
-          <span>완료한 할 일</span>
-          <strong>
-            <a href={`/plans/${planId}?status=${encodeURIComponent('완료')}#todos`}>{doneCount}개</a> / {all.length}개
-          </strong>
+      <div className="overview" aria-label="한눈에 보기">
+        <div className="ov-top">
+          <p className="ov-count">
+            <strong>{doneCount}</strong> / {total} 완료 <span>· 남은 {Math.max(0, total - doneCount)}개</span>
+          </p>
+          <div className="bar" role="img" aria-label={`${total}개 중 ${doneCount}개 완료 (${pct}%)`}>
+            <span style={{ width: `${pct}%` }} />
+          </div>
         </div>
-        <div>
-          <span>실행 기록</span>
-          <strong>{allLogs.length}건</strong>
+
+        {inUnitOrder.length > 0 && (
+          <ul className="tiles" aria-label="할 일 한눈에">
+            {inUnitOrder.map((t) => {
+              const u = unitLabel(t.title)
+              const m = minutesOf(t.id)
+              const state = t.status === '완료' ? 'done' : m > 0 ? 'doing' : 'todo'
+              const label = state === 'done' ? '완료' : state === 'doing' ? '공부 중' : '시작 전'
+              return (
+                <li key={t.id}>
+                  <a href={state === 'done' ? '#done-fold' : `#todo-${t.id}`} className={`tile ${state}`} title={`${t.title} — ${label}`}>
+                    <span className="t-no">{u.no ? `${u.no}단원` : label}</span>
+                    <span className="t-name">{u.name}</span>
+                    <span className="t-sub">
+                      {state === 'done' ? '✓ 완료' : state === 'doing' ? `⏱ ${fmtMinutes(m)}` : u.q ? `${u.q}문항` : '시작 전'}
+                    </span>
+                  </a>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+
+        <div className="ov-stats" aria-label="공부 시간">
+          <div>
+            <span>오늘({today.slice(5)}) 공부</span>
+            <strong>{todayMinutes > 0 ? fmtMinutes(todayMinutes) : '아직 없음'}</strong>
+          </div>
+          <div>
+            <span>지금까지 공부</span>
+            <strong>{actualTotal > 0 ? fmtMinutes(actualTotal) : '아직 없음'}</strong>
+          </div>
+          <div>
+            <span>공부한 날</span>
+            <strong>{studyDays.length}일</strong>
+            {studyDays.length > 0 && <small>{studyDays.map((d) => d.slice(5)).join(', ')}</small>}
+          </div>
         </div>
-        <div>
-          <span>실제로 걸린 시간 합계</span>
-          <strong>{fmtMinutes(actualTotal)}</strong>
-          <small>계획 예상 합계 {plannedHours}시간</small>
-        </div>
-        <div>
-          <span>막혔던 기록</span>
-          <strong>{blockedCount}건</strong>
-        </div>
+        <p>
+          <a className="export-link" href={`/plans/${planId}/review`}>📊 돌아보기 · 하루 공부 시간 표</a>
+        </p>
       </div>
 
       {sp.todo && <p className="ok" role="status">{sp.todo}</p>}
       {sp.todo_error && <p className="error" role="alert">{sp.todo_error}</p>}
       {error && <p className="error">할 일을 불러오지 못했습니다. 잠시 후 다시 시도하세요.</p>}
 
-      <form method="get" action={`/plans/${planId}#todos`} className="filters">
-        <label>
-          검색
-          <input type="search" name="q" defaultValue={sp.q} placeholder="이름이나 태그" />
-        </label>
-        <label>
-          상태
-          <select name="status" defaultValue={sp.status ?? 'all'}>
-            <option value="all">전체</option>
-            <option>진행 중</option>
-            <option>완료</option>
-          </select>
-        </label>
-        <label>
-          우선순위
-          <select name="priority" defaultValue={sp.priority ?? 'all'}>
-            <option value="all">전체</option>
-            <option>높음</option>
-            <option>보통</option>
-            <option>낮음</option>
-          </select>
-        </label>
-        <label>
-          태그
-          <select name="tag" defaultValue={sp.tag ?? 'all'}>
-            <option value="all">전체</option>
-            {allTags.map((t) => (
-              <option key={t}>{t}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          정렬
-          <select name="sort" defaultValue={sortKey}>
-            {Object.entries(SORTS).map(([key, s]) => (
-              <option key={key} value={key}>{s.label}</option>
-            ))}
-          </select>
-        </label>
-        <div className="filter-buttons">
-          <button type="submit">적용</button>
-          <a href={`/plans/${planId}#todos`}>초기화</a>
-        </div>
-      </form>
-
-      <p className="sort-note" role="note">
-        현재 정렬: <strong>{SORTS[sortKey].label}</strong> — {SORTS[sortKey].rule}. 기준 값이 같으면 {TIE_BREAK} 순으로 정합니다.
-        {filtering && <> 조건에 맞는 {sorted.length}개를 보여 주는 중입니다(전체 {all.length}개).</>}
-      </p>
-
-      {all.length === 0 ? (
-        <p>아직 할 일이 없습니다. 아래에서 첫 할 일을 만들어 보세요.</p>
-      ) : sorted.length === 0 ? (
-        <p>조건에 맞는 할 일이 없습니다. <a href={`/plans/${planId}#todos`}>조건 초기화</a></p>
+      <h2 id="remaining">남은 할 일 <small>({remaining.length}개)</small></h2>
+      {filtering && <p className="sort-note">검색·필터 조건에 맞는 것만 보여 주는 중입니다. <a href={`/plans/${planId}#todos`}>조건 초기화</a></p>}
+      {total === 0 ? (
+        <p>아직 할 일이 없습니다. 아래 "새 할 일 만들기"를 열어 첫 할 일을 만들어 보세요.</p>
+      ) : remaining.length === 0 ? (
+        <p className="all-done">{filtering ? '조건에 맞는 남은 할 일이 없습니다.' : '🎉 남은 할 일이 없습니다. 모두 완료했어요.'}</p>
       ) : (
         <ul className="todos">
-          {sorted.map((t) => (
+          {remaining.map((t) => (
             <TodoItem key={t.id} todo={t} planId={planId} logs={logsByTodo.get(t.id) ?? []} />
           ))}
         </ul>
       )}
 
-      <h3>새 할 일 만들기</h3>
-      <form action={createTodo} className="form">
-        <input type="hidden" name="plan_id" value={planId} />
-        <TodoFields />
-        <button type="submit">할 일 저장</button>
-      </form>
+      <details className="fold" id="done-fold" open={sp.status === '완료'}>
+        <summary>✓ 완료한 할 일 {finished.length}개 {finished.length > 0 ? '보기' : '(아직 없음)'}</summary>
+        {finished.length > 0 && (
+          <ul className="todos">
+            {finished.map((t) => (
+              <TodoItem key={t.id} todo={t} planId={planId} logs={logsByTodo.get(t.id) ?? []} />
+            ))}
+          </ul>
+        )}
+      </details>
+
+      <details className="fold">
+        <summary>🔎 검색 · 정렬 · 필터</summary>
+        <form method="get" action={`/plans/${planId}#todos`} className="filters">
+          <label>
+            검색
+            <input type="search" name="q" defaultValue={sp.q} placeholder="이름이나 태그" />
+          </label>
+          <label>
+            우선순위
+            <select name="priority" defaultValue={sp.priority ?? 'all'}>
+              <option value="all">전체</option>
+              <option>높음</option>
+              <option>보통</option>
+              <option>낮음</option>
+            </select>
+          </label>
+          <label>
+            태그
+            <select name="tag" defaultValue={sp.tag ?? 'all'}>
+              <option value="all">전체</option>
+              {allTags.map((t) => (
+                <option key={t}>{t}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            정렬
+            <select name="sort" defaultValue={sortKey}>
+              {Object.entries(SORTS).map(([key, s]) => (
+                <option key={key} value={key}>{s.label}</option>
+              ))}
+            </select>
+          </label>
+          <div className="filter-buttons">
+            <button type="submit">적용</button>
+            <a href={`/plans/${planId}#todos`}>초기화</a>
+          </div>
+        </form>
+        <p className="sort-note" role="note">
+          현재 정렬: <strong>{SORTS[sortKey].label}</strong> — {SORTS[sortKey].rule}. 기준 값이 같으면 {TIE_BREAK} 순으로 정합니다.
+        </p>
+      </details>
+
+      <details className="fold">
+        <summary>＋ 새 할 일 만들기</summary>
+        <form action={createTodo} className="form">
+          <input type="hidden" name="plan_id" value={planId} />
+          <TodoFields />
+          <button type="submit">할 일 저장</button>
+        </form>
+      </details>
     </section>
   )
 }

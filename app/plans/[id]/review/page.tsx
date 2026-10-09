@@ -4,7 +4,7 @@ import { db, type Todo, type ExecutionLog } from '@/lib/db'
 import { requireOwnedPlan } from '@/lib/ownership'
 import { analyze, addDays, dailyMinutes, fmtDiff, fmtMinutes, isDate, kstWeekday, todayKst, weekRanges, DAY_SPIKE_MIN, LOG_SPIKE_MIN, type Metrics, type ReviewLog } from '@/lib/review'
 import { carryReview } from '@/app/review-actions'
-import PublicNotice from '@/app/PublicNotice'
+
 
 type SP = {
   from?: string
@@ -376,7 +376,6 @@ export default function ReviewPage(props: Props) {
   return (
     <main>
       <p className="crumbs"><Link href="/">← 계획 목록</Link></p>
-      <PublicNotice />
       <Suspense fallback={<p>집계하는 중…</p>}>
         <Review {...props} />
       </Suspense>

@@ -334,3 +334,39 @@ table.daily tfoot th, table.daily tfoot td { border-top: 2px solid var(--line); 
 .userbar-link:hover { background: rgba(255, 255, 255, 0.3); }
 label.check { display: flex; align-items: flex-start; gap: 8px; font-weight: 400; color: var(--fg); }
 label.check input { width: auto; margin-top: 4px; }
+
+/* ───────── 계획 화면: 한눈에 보기 (카드 5 화면 정리) ───────── */
+.overview {
+  background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 18px 20px 14px;
+  box-shadow: var(--shadow); margin: 0 0 18px;
+}
+.ov-count { font-size: 1.15rem; margin: 0 0 8px; }
+.ov-count strong { font-size: 2.2rem; line-height: 1; color: var(--accent); margin-right: 2px; }
+.ov-count span { color: var(--muted); font-size: 0.95rem; }
+.overview .bar { height: 12px; }
+.tiles { list-style: none; padding: 0; margin: 16px 0 14px; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
+.tile {
+  display: grid; gap: 1px; padding: 10px 12px; border-radius: 14px; text-decoration: none; color: var(--fg);
+  border: 1.5px solid var(--line); background: var(--page); min-height: 74px; align-content: center;
+}
+.tile:hover { filter: brightness(0.97); transform: translateY(-1px); }
+.tile .t-no { font-size: 0.78rem; color: var(--muted); font-weight: 700; }
+.tile .t-name { font-weight: 800; font-size: 1.02rem; line-height: 1.25; overflow-wrap: anywhere; }
+.tile .t-sub { font-size: 0.8rem; color: var(--muted); }
+.tile.done { background: var(--ok-soft); border-color: var(--ok); }
+.tile.done .t-name, .tile.done .t-sub { color: var(--ok); }
+.tile.doing { background: var(--warn-bg); border-color: var(--warn-line); }
+.tile.doing .t-name, .tile.doing .t-sub { color: var(--warn-fg); }
+.ov-stats { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin: 4px 0 8px; }
+.ov-stats > div { background: var(--page); border-radius: 12px; padding: 8px 12px; display: grid; gap: 1px; }
+.ov-stats span { color: var(--muted); font-size: 0.82rem; }
+.ov-stats strong { font-size: 1.15rem; }
+.ov-stats small { color: var(--muted); }
+
+.fold { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 4px 16px; margin: 14px 0; box-shadow: var(--shadow); }
+.fold > summary { cursor: pointer; font-weight: 700; padding: 10px 0; }
+.fold[open] > summary { border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+.all-done { background: var(--ok-soft); color: var(--ok); font-weight: 700; padding: 12px 16px; border-radius: 12px; }
+.chip-time { background: var(--warn-bg); color: var(--warn-fg); border-color: var(--warn-line); font-weight: 700; }
+button.btn-done { background: var(--ok); color: #fff; }
+.todo.done { opacity: 0.88; }

@@ -5,7 +5,7 @@ import { db, type PlanRevision } from '@/lib/db'
 import { requireOwnedPlan } from '@/lib/ownership'
 import { updatePlan } from '@/app/actions'
 import PlanForm from '@/app/PlanForm'
-import PublicNotice from '@/app/PublicNotice'
+
 import TodoSection, { type TodoSearchParams } from './TodoSection'
 
 const FIELDS: [keyof PlanRevision, string][] = [
@@ -38,7 +38,6 @@ async function PlanHeader({ params, searchParams }: Props) {
       <p className="chips">
         <span className="chip">📅 {plan.start_date} ~ {plan.end_date}</span>
         <span className="chip chip-prio" data-p={plan.priority}>우선순위 {plan.priority}</span>
-        <span className="chip">⏱ 예상 {plan.estimated_hours}시간</span>
       </p>
       <p className="lead">🎯 성공 기준: {plan.success_criteria}</p>
       {saved && <p className="ok" role="status">저장했습니다.</p>}
@@ -99,7 +98,6 @@ export default function PlanPage(props: Props) {
         <a href="#todos">할 일 ↓</a>
         <a href="#plan-edit">계획 고치기·수정 이력 ↓</a>
       </p>
-      <PublicNotice />
       <Suspense fallback={<p>불러오는 중…</p>}>
         <PlanHeader {...props} />
       </Suspense>
