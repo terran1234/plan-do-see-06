@@ -10,13 +10,15 @@ import { requireOwnedPlan, requireOwnedTodo } from '@/lib/ownership'
 
 const UUID = /^[0-9a-f-]{36}$/i
 const PRIORITIES = ['높음', '보통', '낮음']
+// DB 의 예상 시간 칸은 필수(0보다 큰 값)지만 화면에서는 묻지 않는다. 쓰지 않는 값이라 자리표시 값(최소값)을 넣는다.
+const PLACEHOLDER_HOURS = 0.5
 
 type TodoInput = {
   title: string
   due_date: string
   priority: string
   tags: string[]
-  estimated_hours: number
+  estimated_hours?: number
 }
 type Parsed = { error: string; value?: undefined } | { error?: undefined; value: TodoInput }
 
@@ -24,7 +26,9 @@ function parseTodo(formData: FormData): Parsed {
   const title = String(formData.get('title') ?? '').trim()
   const due_date = String(formData.get('due_date') ?? '')
   const priority = String(formData.get('priority') ?? '')
-  const estimated_hours = Number(formData.get('estimated_hours'))
+  // 예상 시간 칸은 화면에서 뺐다(어림값이라 쓰지 않는다). 값이 오면 검사하고, 없으면 저장하지 않는다.
+  const rawHours = String(formData.get('estimated_hours') ?? '').trim()
+  const estimated_hours = rawHours === '' ? undefined : Number(rawHours)
   const tags = [
     ...new Set(
       String(formData.get('tags') ?? '')
@@ -37,13 +41,13 @@ function parseTodo(formData: FormData): Parsed {
   if (!title || title.length > 100) return { error: '할 일 이름은 1~100자로 입력하세요.' }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(due_date)) return { error: '마감일을 입력하세요.' }
   if (!PRIORITIES.includes(priority)) return { error: '우선순위를 고르세요.' }
-  if (!Number.isFinite(estimated_hours) || estimated_hours <= 0 || estimated_hours > 999) {
+  if (estimated_hours !== undefined && (!Number.isFinite(estimated_hours) || estimated_hours <= 0 || estimated_hours > 999)) {
     return { error: '예상 시간은 0보다 큰 숫자로 입력하세요.' }
   }
   if (tags.length > 5 || tags.some((t) => t.length > 20)) {
     return { error: '태그는 쉼표로 구분해 최대 5개, 각 20자 이하로 입력하세요.' }
   }
-  return { value: { title, due_date, priority, tags, estimated_hours } }
+  return { value: { title, due_date, priority, tags, ...(estimated_hours === undefined ? {} : { estimated_hours }) } }
 }
 
 function back(planId: string, msg: string): never {
@@ -73,7 +77,7 @@ export async function createTodo(formData: FormData) {
   const parsed = parseTodo(formData)
   if (parsed.value === undefined) fail(planId, parsed.error)
 
-  const { error } = await db().from('todos').insert({ ...parsed.value, plan_id: planId })
+  const { error } = await db().from('todos').insert({ estimated_hours: PLACEHOLDER_HOURS, ...parsed.value, plan_id: planId })
   if (error) fail(planId, '할 일을 저장하지 못했습니다. (계획이 없어졌을 수 있습니다.)')
   back(planId, '할 일을 만들었습니다.')
 }

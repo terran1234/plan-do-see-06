@@ -71,10 +71,6 @@ function TodoFields({ todo }: { todo?: Todo }) {
           태그 (쉼표로 구분, 최대 5개)
           <input name="tags" maxLength={120} defaultValue={todo?.tags.join(', ')} placeholder="예) SQL, 기출" />
         </label>
-        <label>
-          예상 시간(시간) — 앱이 요구하는 칸이며 하루 공부 시간 지표에는 쓰지 않습니다
-          <input type="number" name="estimated_hours" required min="0.5" step="0.5" defaultValue={todo?.estimated_hours} />
-        </label>
       </div>
     </>
   )

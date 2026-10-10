@@ -74,7 +74,7 @@ function parseForms(html) {
   return forms
 }
 function kindOf({ hidden: h, names: n }) {
-  if (n.has('takeaway')) return 'carryReview'
+  if (n.has('rule') && n.has('reason')) return 'changeRule'
   if (h.log_id) return 'deleteLog'
   if (h.status && h.request_key) return 'setTodoStatus'
   if (h.todo_id && h.request_key) return 'createLog'
@@ -178,10 +178,10 @@ async function attack(att, vic) {
   record('수정', `완료로 바꾸기   plan_id=${short(P)} id=${short(T)} status=완료`, await submit(att, 'setTodoStatus', { plan_id: P, id: T, status: '완료', request_key: randomUUID() }), { notIn: hide })
   record('수정', `할 일 추가     plan_id=${short(P)} title="${bad}"`, await submit(att, 'createTodo', { plan_id: P, title: bad, due_date: '2026-10-11', priority: '높음', tags: '침입', estimated_hours: '9' }), { notIn: hide })
   record('수정', `실행 기록 추가 plan_id=${short(P)} todo_id=${short(T)}`, await submit(att, 'createLog', { plan_id: P, todo_id: T, request_key: randomUUID(), started_at: '2026-10-08T09:00', ended_at: '2026-10-08T10:00', actual_minutes: '5', blocked_reason: bad }), { notIn: hide })
-  if (att.actions.carryReview) {
-    record('수정', `돌아보기 넘기기 plan_id=${short(P)}`, await submit(att, 'carryReview', { plan_id: P, from: '2026-10-07', to: '2026-10-25', takeaway: bad, reason: bad, due_date: '2026-10-26', priority: '높음', estimated_hours: '1' }), { notIn: hide })
+  if (att.actions.changeRule) {
+    record('수정', `계획 규칙 바꾸기 plan_id=${short(P)}`, await submit(att, 'changeRule', { plan_id: P, from: '2026-10-07', to: '2026-10-25', rule: bad, reason: bad }), { notIn: hide })
   } else {
-    say('  – [수정] 돌아보기 넘기기: 이 계정의 화면에서 해당 폼을 찾지 못해 건너뜀')
+    say('  – [수정] 계획 규칙 바꾸기: 이 계정의 화면에서 해당 폼을 찾지 못해 건너뜀')
   }
 
   say('\n  ▸ 삭제')

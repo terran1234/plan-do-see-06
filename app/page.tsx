@@ -28,7 +28,6 @@ async function PlanList() {
             <span className="chips">
               <span className="chip">📅 {p.start_date} ~ {p.end_date}</span>
               <span className="chip chip-prio" data-p={p.priority}>우선순위 {p.priority}</span>
-              <span className="chip">⏱ 예상 {p.estimated_hours}시간</span>
             </span>
             <span className="go">열어서 할 일·실행 기록·돌아보기 보기 →</span>
           </Link>

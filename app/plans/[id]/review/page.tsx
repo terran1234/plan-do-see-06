@@ -3,13 +3,13 @@ import Link from 'next/link'
 import { db, type Todo, type ExecutionLog } from '@/lib/db'
 import { requireOwnedPlan } from '@/lib/ownership'
 import { addDays, dailyMinutes, fmtMinutes, isDate, kstWeekday, DAY_SPIKE_MIN, LOG_SPIKE_MIN } from '@/lib/review'
-import { carryReview } from '@/app/review-actions'
+import { changeRule } from '@/app/review-actions'
 
 type SP = {
   from?: string
   to?: string
   error?: string
-  carried?: string
+  saved?: string
 }
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<SP> }
 
@@ -23,7 +23,7 @@ function kst(iso: string) {
 
 // 돌아보기를 저장할 때 함께 남긴 일별 기록. 그때 어떤 실행 기록을 보고 정했는지 번호로 가리킨다.
 type SavedDaily = { days: { date: string; minutes: number; log_ids: string[] }[]; total_minutes: number; avg_minutes: number | null; day_count: number }
-type Snapshot = { reason?: string; daily?: SavedDaily }
+type Snapshot = { kind?: string; reason?: string; daily?: SavedDaily }
 
 async function Review({ params, searchParams }: Props) {
   const { id } = await params
@@ -57,10 +57,9 @@ async function Review({ params, searchParams }: Props) {
     if (w.days.length > 0) weeks.push({ from: ws, to: we, ...w })
   }
   const titleOf = new Map(todos.map((t) => [t.id, t.title]))
-  const carriedByReview = new Map(todos.filter((t) => t.source_review_id).map((t) => [t.source_review_id as string, t]))
   const reviews = (reviewRows ?? []) as { id: string; period_from: string; period_to: string; takeaway: string; snapshot: Snapshot; created_at: string }[]
-  const alreadyCarried = reviews.some((r) => r.period_from === from && r.period_to === to)
-  const defaultDue = addDays(to, 1)
+  const rules = reviews.filter((r) => r.snapshot.kind === 'rule_change')
+  const alreadyChanged = rules.some((r) => r.period_from === from && r.period_to === to)
 
   return (
     <>
@@ -170,69 +169,49 @@ async function Review({ params, searchParams }: Props) {
       )}
 
       <section id="next">
-        <h2>계획 규칙 바꾸기 · 다음 계획으로 넘기기</h2>
-        {sp.carried && <p className="ok" role="status">다음 계획(할 일)으로 넘겼습니다. <a href={`/plans/${id}#todo-${sp.carried}`}>넘어간 할 일 보기</a></p>}
+        <h2>계획 규칙 바꾸기</h2>
+        {sp.saved && <p className="ok" role="status">규칙 변경을 저장했습니다. 아래 "지금까지 바꾼 규칙"에서 확인하세요.</p>}
         {sp.error && <p className="error" role="alert">{sp.error}</p>}
-        <p>이 기간({from} ~ {to})을 돌아보고, <strong>바꿀 점 한 가지</strong>만 한 줄로 정하세요. 정한 시각과 이유, 그리고 이 기간의 공부 기록 번호가 함께 저장되고, 다음 계획의 할 일로 이어집니다.</p>
-        {alreadyCarried ? (
-          <p className="notice" role="note">이 기간은 이미 넘겼습니다. 다른 기간을 고르면 새로 넘길 수 있습니다.</p>
+        <p>
+          위 기간({from} ~ {to})의 공부 기록을 보고, 계획 규칙을 <strong>하나만</strong> 바꿉니다. 바꾼 시각, 이유, 그리고 이 기간의 공부 기록 번호가 함께 저장됩니다.
+          규칙은 공부하는 방식이라서 <strong>할 일(계획)은 만들어지지 않습니다.</strong>
+        </p>
+        {alreadyChanged ? (
+          <p className="notice" role="note">이 기간의 규칙 변경은 이미 저장했습니다. 다른 기간을 고르면 새로 바꿀 수 있습니다.</p>
         ) : (
-          <form action={carryReview} className="form">
+          <form action={changeRule} className="form">
             <input type="hidden" name="plan_id" value={id} />
             <input type="hidden" name="from" value={from} />
             <input type="hidden" name="to" value={to} />
             <label>
-              바꿀 점 / 새 규칙 (한 줄, 100자 이하)
-              <input name="takeaway" required maxLength={100} placeholder="예) 오전 10시 정각에 시작한다" />
+              새 규칙 (한 줄, 100자 이하)
+              <input name="rule" required maxLength={100} placeholder="예) 오전 10시 정각에 시작한다" />
             </label>
             <label>
               이유 (왜 바꾸나, 한 줄, 200자 이하)
-              <input name="reason" required maxLength={200} placeholder="예) 점심 뒤에 집중이 떨어져 오후 기록이 짧았다" />
+              <input name="reason" required maxLength={200} placeholder="예) 시간표를 지킨 날과 못 지킨 날의 차이가 커서" />
             </label>
-            <div className="row">
-              <label>
-                다음 계획 마감일
-                <input type="date" name="due_date" required defaultValue={defaultDue} />
-              </label>
-              <label>
-                우선순위
-                <select name="priority" defaultValue="높음">
-                  <option>높음</option>
-                  <option>보통</option>
-                  <option>낮음</option>
-                </select>
-              </label>
-            </div>
-            <label>
-              예상 시간(시간) — 앱이 요구하는 칸이며 하루 공부 시간 지표에는 쓰지 않습니다
-              <input type="number" name="estimated_hours" required min="0.5" step="0.5" defaultValue="0.5" />
-            </label>
-            <button type="submit">저장하고 다음 계획으로 넘기기</button>
+            <button type="submit">규칙 바꾸기 저장</button>
           </form>
         )}
 
-        <h3>지금까지 정한 것</h3>
-        {reviews.length === 0 ? (
+        <h3>지금까지 바꾼 규칙</h3>
+        {rules.length === 0 ? (
           <p className="log-empty">아직 없습니다.</p>
         ) : (
           <ul className="evidence">
-            {reviews.map((r) => {
-              const t = carriedByReview.get(r.id)
+            {rules.map((r) => {
               const sd = r.snapshot.daily
               return (
                 <li key={r.id}>
                   <strong>{r.takeaway}</strong>
-                  <span>정한 시각 {kst(r.created_at)} (서울){r.snapshot.reason ? ` · 이유: ${r.snapshot.reason}` : ''}</span>
+                  <span>바꾼 시각 {kst(r.created_at)} (서울){r.snapshot.reason ? ` · 이유: ${r.snapshot.reason}` : ''}</span>
                   {sd && (
                     <span>
                       그때 본 공부 기록({r.period_from} ~ {r.period_to}): {sd.days.map((d) => `${d.date.slice(5).replace('-', '/')} ${d.minutes}분(${d.log_ids.length}건)`).join(', ')}
                       {' '}→ {sd.day_count}일 합계 {sd.total_minutes}분 · 평균 {sd.avg_minutes ?? '—'}분
                     </span>
                   )}
-                  <span>
-                    → 다음 계획: {t ? <a href={`/plans/${id}#todo-${t.id}`}>{t.title}</a> : '(할 일이 지워졌습니다)'}
-                    {t && ` · 마감 ${t.due_date} · ${t.status}`}
-                  </span>
                 </li>
               )
             })}

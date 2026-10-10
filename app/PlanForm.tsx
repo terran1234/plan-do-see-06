@@ -35,10 +35,6 @@ export default function PlanForm({
             <option>낮음</option>
           </select>
         </label>
-        <label>
-          예상 시간(시간)
-          <input type="number" name="estimated_hours" required min="0.5" step="0.5" defaultValue={plan?.estimated_hours} />
-        </label>
       </div>
       <label>
         성공 기준
