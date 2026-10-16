@@ -1,0 +1,391 @@
+{
+  "format": "plan-do-see-export",
+  "schema": "pds-schema-v2",
+  "exported_at": "2026-10-16T03:16:26.616Z",
+  "notes": {
+    "timezone": "시각(timestamptz)은 UTC로 저장·내보내고 화면에서는 Asia/Seoul로 보여 준다. 날짜(date)는 서울 달력 날짜 그대로다.",
+    "units": {
+      "estimated_hours": "시간(hour)",
+      "actual_minutes": "분(minute)"
+    }
+  },
+  "counts": {
+    "plans": 2,
+    "plan_revisions": 3,
+    "todos": 10,
+    "execution_logs": 5,
+    "completions": 5,
+    "reviews": 2
+  },
+  "data": {
+    "plans": [
+      {
+        "id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "정보처리기사 실기 시험 준비 (주 5회 공부)",
+        "start_date": "2026-10-07",
+        "end_date": "2026-10-25",
+        "priority": "높음",
+        "success_criteria": "시험일(10/25)까지 남은 기간 동안 평일마다 5시간씩 공부한다 (주 5회).",
+        "estimated_hours": 60,
+        "created_at": "2026-10-07T05:12:13.586531+00:00",
+        "updated_at": "2026-10-09T02:44:15.998361+00:00",
+        "user_id": "abcddbaa-c445-470d-a983-46cc71c41112"
+      },
+      {
+        "id": "7a93d890-d198-46bc-b944-4474161a4fe9",
+        "title": "파이팅입니다.",
+        "start_date": "2026-10-07",
+        "end_date": "2026-10-07",
+        "priority": "높음",
+        "success_criteria": "100%",
+        "estimated_hours": 8,
+        "created_at": "2026-10-07T06:50:28.783525+00:00",
+        "updated_at": "2026-10-09T02:44:15.998361+00:00",
+        "user_id": "abcddbaa-c445-470d-a983-46cc71c41112"
+      }
+    ],
+    "plan_revisions": [
+      {
+        "id": "0edd4152-c63f-4294-9fa2-7b5a8a96d7f1",
+        "plan_id": "7a93d890-d198-46bc-b944-4474161a4fe9",
+        "revision_no": 1,
+        "title": "파이팅입니다.",
+        "start_date": "2026-10-07",
+        "end_date": "2026-10-07",
+        "priority": "높음",
+        "success_criteria": "100%",
+        "estimated_hours": 8,
+        "revised_at": "2026-10-07T06:50:28.783525+00:00"
+      },
+      {
+        "id": "bf90ac50-97f0-4f1a-9d2a-4257082a8636",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "revision_no": 2,
+        "title": "정보처리기사 실기 시험 준비 (주 5회 공부)",
+        "start_date": "2026-10-07",
+        "end_date": "2026-10-25",
+        "priority": "높음",
+        "success_criteria": "시험일(10/25)까지 남은 기간 동안 평일마다 5시간씩 공부한다 (주 5회).",
+        "estimated_hours": 60,
+        "revised_at": "2026-10-07T05:12:27.050575+00:00"
+      },
+      {
+        "id": "f2222603-8346-4df8-886b-495ea93c8bd9",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "revision_no": 1,
+        "title": "정보처리기사 실기 시험 준비 (주 5회 공부)",
+        "start_date": "2026-10-07",
+        "end_date": "2026-10-25",
+        "priority": "높음",
+        "success_criteria": "시험일(10/25)까지 남은 기간 동안 평일마다 5시간씩 공부한다 (주 5회).",
+        "estimated_hours": 65,
+        "revised_at": "2026-10-07T05:12:13.586531+00:00"
+      }
+    ],
+    "todos": [
+      {
+        "id": "372a866e-4483-4090-b38e-23856d61c417",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "4단원 네트워크 (43문항)",
+        "due_date": "2026-10-25",
+        "priority": "보통",
+        "tags": [
+          "단원"
+        ],
+        "estimated_hours": 4.5,
+        "status": "완료",
+        "completed_at": "2026-10-09T08:36:36.175511+00:00",
+        "created_at": "2026-10-09T08:35:04.725917+00:00",
+        "updated_at": "2026-10-09T08:36:36.175511+00:00",
+        "source_review_id": null
+      },
+      {
+        "id": "4b69483d-6174-4b03-8d14-b3872355cc61",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "1단원 SW 개발/계획 (80문항)",
+        "due_date": "2026-10-25",
+        "priority": "보통",
+        "tags": [
+          "단원"
+        ],
+        "estimated_hours": 8,
+        "status": "진행 중",
+        "completed_at": null,
+        "created_at": "2026-10-09T08:34:58.335795+00:00",
+        "updated_at": "2026-10-09T08:34:58.335795+00:00",
+        "source_review_id": null
+      },
+      {
+        "id": "570dcaaf-6cb2-4947-8857-ab2412049ae2",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "6단원 SQL문 (37문항)",
+        "due_date": "2026-10-25",
+        "priority": "보통",
+        "tags": [
+          "단원"
+        ],
+        "estimated_hours": 3.5,
+        "status": "진행 중",
+        "completed_at": null,
+        "created_at": "2026-10-09T08:35:07.87056+00:00",
+        "updated_at": "2026-10-09T08:35:07.87056+00:00",
+        "source_review_id": null
+      },
+      {
+        "id": "6702c67e-3153-4063-b92b-9cbfe230e441",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "8단원 Python (24문항)",
+        "due_date": "2026-10-25",
+        "priority": "보통",
+        "tags": [
+          "단원"
+        ],
+        "estimated_hours": 2.5,
+        "status": "진행 중",
+        "completed_at": null,
+        "created_at": "2026-10-09T08:35:12.052504+00:00",
+        "updated_at": "2026-10-09T08:35:12.052504+00:00",
+        "source_review_id": null
+      },
+      {
+        "id": "683b8224-325c-4922-a843-4a40eef1318e",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "9단원 C언어 (59문항)",
+        "due_date": "2026-10-25",
+        "priority": "보통",
+        "tags": [
+          "단원"
+        ],
+        "estimated_hours": 6,
+        "status": "진행 중",
+        "completed_at": null,
+        "created_at": "2026-10-09T08:35:13.494896+00:00",
+        "updated_at": "2026-10-09T08:35:13.494896+00:00",
+        "source_review_id": null
+      },
+      {
+        "id": "711697e3-dddd-4c25-82a6-981c10210736",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "2단원 정보보안 (42문항)",
+        "due_date": "2026-10-25",
+        "priority": "보통",
+        "tags": [
+          "단원"
+        ],
+        "estimated_hours": 4,
+        "status": "완료",
+        "completed_at": "2026-10-16T03:02:06.71243+00:00",
+        "created_at": "2026-10-09T08:35:00.405685+00:00",
+        "updated_at": "2026-10-16T03:02:06.71243+00:00",
+        "source_review_id": null
+      },
+      {
+        "id": "71e4515c-b84a-47b3-b462-6095a6168817",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "3단원 데이터베이스 (45문항)",
+        "due_date": "2026-10-25",
+        "priority": "보통",
+        "tags": [
+          "단원"
+        ],
+        "estimated_hours": 4.5,
+        "status": "완료",
+        "completed_at": "2026-10-16T03:02:44.647585+00:00",
+        "created_at": "2026-10-09T08:35:02.3887+00:00",
+        "updated_at": "2026-10-16T03:02:44.647585+00:00",
+        "source_review_id": null
+      },
+      {
+        "id": "a10ab3f5-40e2-495d-bb52-dd256fcc33dd",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "7단원 운영체제 (14문항)",
+        "due_date": "2026-10-25",
+        "priority": "보통",
+        "tags": [
+          "단원"
+        ],
+        "estimated_hours": 1.5,
+        "status": "완료",
+        "completed_at": "2026-10-09T08:37:00.98029+00:00",
+        "created_at": "2026-10-09T08:35:09.843921+00:00",
+        "updated_at": "2026-10-09T08:37:00.98029+00:00",
+        "source_review_id": null
+      },
+      {
+        "id": "be0a721f-62c4-4344-838c-2def265223f6",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "5단원 기타 용어 (20문항)",
+        "due_date": "2026-10-25",
+        "priority": "보통",
+        "tags": [
+          "단원"
+        ],
+        "estimated_hours": 2,
+        "status": "완료",
+        "completed_at": "2026-10-09T08:36:42.491965+00:00",
+        "created_at": "2026-10-09T08:35:06.326447+00:00",
+        "updated_at": "2026-10-09T08:36:42.491965+00:00",
+        "source_review_id": null
+      },
+      {
+        "id": "cb61bcb7-788e-469d-b68d-945183662e1d",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "title": "10단원 Java (56문항)",
+        "due_date": "2026-10-25",
+        "priority": "보통",
+        "tags": [
+          "단원"
+        ],
+        "estimated_hours": 5.5,
+        "status": "진행 중",
+        "completed_at": null,
+        "created_at": "2026-10-09T08:35:16.091881+00:00",
+        "updated_at": "2026-10-09T08:35:16.091881+00:00",
+        "source_review_id": null
+      }
+    ],
+    "execution_logs": [
+      {
+        "id": "10379aac-66f0-46c3-8050-89a1f012fc69",
+        "todo_id": "6702c67e-3153-4063-b92b-9cbfe230e441",
+        "started_at": "2026-10-10T13:30:00+00:00",
+        "ended_at": "2026-10-10T14:30:00+00:00",
+        "actual_minutes": 60,
+        "blocked_reason": null,
+        "request_key": "a7bd12ea-e8a5-4903-9b52-647933d26dae",
+        "created_at": "2026-10-10T14:45:13.967959+00:00"
+      },
+      {
+        "id": "5cb2a1ae-d64a-40e1-bd07-11cc91c2b432",
+        "todo_id": "71e4515c-b84a-47b3-b462-6095a6168817",
+        "started_at": "2026-10-12T01:00:00+00:00",
+        "ended_at": "2026-10-12T10:07:00+00:00",
+        "actual_minutes": 360,
+        "blocked_reason": null,
+        "request_key": "867d939d-ee0f-446c-af50-864eefae2e24",
+        "created_at": "2026-10-16T03:07:23.195655+00:00"
+      },
+      {
+        "id": "62ed9a0e-71f5-4ca4-a1c6-2a5181de9a75",
+        "todo_id": "71e4515c-b84a-47b3-b462-6095a6168817",
+        "started_at": "2026-10-13T01:00:00+00:00",
+        "ended_at": "2026-10-13T09:30:00+00:00",
+        "actual_minutes": 330,
+        "blocked_reason": null,
+        "request_key": "63569b7a-c087-41e5-9360-267cf211a0e9",
+        "created_at": "2026-10-16T03:08:48.321955+00:00"
+      },
+      {
+        "id": "677a5ab2-c472-4ade-870a-8616ba234b81",
+        "todo_id": "71e4515c-b84a-47b3-b462-6095a6168817",
+        "started_at": "2026-10-11T01:00:00+00:00",
+        "ended_at": "2026-10-11T08:00:00+00:00",
+        "actual_minutes": 310,
+        "blocked_reason": null,
+        "request_key": "e7634ef9-e65c-4553-9f87-ed5447ef874c",
+        "created_at": "2026-10-16T03:06:30.561209+00:00"
+      },
+      {
+        "id": "6dd287db-ccbf-4d4f-b2c3-7ccbd06b9cbb",
+        "todo_id": "6702c67e-3153-4063-b92b-9cbfe230e441",
+        "started_at": "2026-10-09T01:20:00+00:00",
+        "ended_at": "2026-10-09T08:00:00+00:00",
+        "actual_minutes": 300,
+        "blocked_reason": "변수에 리스트를 저장 할떄 생기는 주소 문제에서 좀 햇갈림",
+        "request_key": "3daa0cb7-c632-4c9d-b0d3-94c75b0d421f",
+        "created_at": "2026-10-09T08:37:59.832372+00:00"
+      }
+    ],
+    "completions": [
+      {
+        "id": "61752191-483a-4d1e-b78e-60c62a8f50de",
+        "todo_id": "71e4515c-b84a-47b3-b462-6095a6168817",
+        "completed_at": "2026-10-16T03:02:44.647585+00:00",
+        "reverted_at": null,
+        "request_key": "93778ba3-519a-46ce-a70d-13642d811aad"
+      },
+      {
+        "id": "9bb5779a-6b67-4072-990d-9db9ce6c30d2",
+        "todo_id": "a10ab3f5-40e2-495d-bb52-dd256fcc33dd",
+        "completed_at": "2026-10-09T08:37:00.98029+00:00",
+        "reverted_at": null,
+        "request_key": "cb761a44-300e-49c3-9431-19583da01fca"
+      },
+      {
+        "id": "b71e0427-5ff9-4793-a6c2-03ee0e61aefc",
+        "todo_id": "711697e3-dddd-4c25-82a6-981c10210736",
+        "completed_at": "2026-10-16T03:02:06.71243+00:00",
+        "reverted_at": null,
+        "request_key": "f59bf1a1-bb4c-41f3-9e01-02f6abb4d280"
+      },
+      {
+        "id": "e7180779-b534-4ac7-afe2-fed3502b57c0",
+        "todo_id": "be0a721f-62c4-4344-838c-2def265223f6",
+        "completed_at": "2026-10-09T08:36:42.491965+00:00",
+        "reverted_at": null,
+        "request_key": "60c57ef9-5c56-4597-a5be-80120bdf0e67"
+      },
+      {
+        "id": "fb0f269c-38cb-4d9d-97ae-d649a12a98e7",
+        "todo_id": "372a866e-4483-4090-b38e-23856d61c417",
+        "completed_at": "2026-10-09T08:36:36.175511+00:00",
+        "reverted_at": null,
+        "request_key": "cba3a26d-c8b9-457d-8069-8f8b84d48b13"
+      }
+    ],
+    "reviews": [
+      {
+        "id": "28776040-6b69-4f61-ac43-b11b5068964f",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "period_from": "2026-10-09",
+        "period_to": "2026-10-10",
+        "takeaway": "오전 10시 정각에 시작한다",
+        "snapshot": {
+          "kind": "rule_change",
+          "daily": {
+            "days": [
+              {
+                "date": "2026-10-09",
+                "log_ids": [
+                  "6dd287db-ccbf-4d4f-b2c3-7ccbd06b9cbb"
+                ],
+                "minutes": 300
+              },
+              {
+                "date": "2026-10-10",
+                "log_ids": [
+                  "10379aac-66f0-46c3-8050-89a1f012fc69"
+                ],
+                "minutes": 60
+              }
+            ],
+            "day_count": 2,
+            "avg_minutes": 180,
+            "total_minutes": 360
+          },
+          "today": "2026-10-11",
+          "reason": "시작 시간을 지킨 날(300분)과 못 지킨 날(60분)의 차이가 커서"
+        },
+        "created_at": "2026-10-10T16:15:00.556659+00:00"
+      },
+      {
+        "id": "78e52f6c-adda-4986-a423-c4505b74f5e7",
+        "plan_id": "785385a8-45f5-4acc-bfc7-d2289dc67c93",
+        "period_from": "2026-10-07",
+        "period_to": "2026-10-25",
+        "takeaway": "코드 해석은 개념만 외우지 말고 매일 코드 1문제씩 직접 읽는다",
+        "snapshot": {
+          "done": 0,
+          "late": 0,
+          "today": "2026-10-07",
+          "blocked": 2,
+          "planned": 7,
+          "estMinutes": 2100,
+          "diffMinutes": -1320,
+          "actualMinutes": 780
+        },
+        "created_at": "2026-10-07T06:30:11.859887+00:00"
+      }
+    ]
+  }
+}
