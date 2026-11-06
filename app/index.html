@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 서버 설정 검사기</title>
+<meta name="description" content="AI가 만들어 준 서버·방화벽 설정을 붙여 넣기 전에, 논문이 정한 위험 항목 6개를 찾아 고칠 줄을 알려 주는 앱.">
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1d1b;--mute:#6b6a65;--line:#e4e1d8;--accent:#1f5f4a;--card:#ffffff;--bad:#a4341f;--badbg:#fbeee9;--ok:#1f5f4a;--okbg:#e9f4ee;--note:#7a5b00;--notebg:#fbf4dc}
+@media (prefers-color-scheme:dark){:root{--bg:#161715;--fg:#ecebe6;--mute:#a3a29b;--line:#2e2f2b;--accent:#7fd1b0;--card:#1e1f1c;--bad:#ff9d86;--badbg:#3a211b;--ok:#7fd1b0;--okbg:#16302a;--note:#e7c766;--notebg:#352d12}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.7 "Pretendard","Noto Sans KR",system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:0 20px 72px}
+header{padding:40px 0 20px;border-bottom:1px solid var(--line)}
+.paper{margin:0 0 6px;font-size:14px;color:var(--mute)}
+h1{margin:0 0 14px;font-size:30px;line-height:1.3;letter-spacing:-.02em}
+.one{margin:0;font-size:18px;line-height:1.65;font-weight:600}
+section{padding:26px 0 0}
+h2{font-size:19px;margin:0 0 10px}
+label{display:block;font-weight:600;margin:12px 0 4px;font-size:15px}
+textarea,input[type=text]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg);font:14.5px/1.55 ui-monospace,Consolas,monospace}
+textarea{min-height:190px;resize:vertical}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+button{padding:9px 16px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--fg);font:inherit;font-size:15px;cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:700}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hint{margin:4px 0 0;font-size:13.5px;color:var(--mute)}
+.status{margin:18px 0 0;padding:12px 16px;border-radius:10px;font-weight:600}
+.status.bad{background:var(--badbg);color:var(--bad)}
+.status.good{background:var(--okbg);color:var(--ok)}
+.status.neutral{background:var(--notebg);color:var(--note)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:12px 0}
+.card h3{margin:0 0 4px;font-size:16px}
+.card .tag{display:inline-block;margin-right:6px;padding:0 8px;border-radius:6px;background:var(--badbg);color:var(--bad);font-size:13px;font-weight:700}
+.card code,pre{font:13.5px/1.55 ui-monospace,Consolas,monospace}
+.card pre{margin:6px 0;padding:8px 10px;background:var(--bg);border:1px solid var(--line);border-radius:8px;white-space:pre-wrap;word-break:break-all}
+.card p{margin:4px 0;font-size:15px}
+.fix{color:var(--ok)}
+table{width:100%;border-collapse:collapse;font-size:14.5px;margin:8px 0}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--mute);font-weight:600}
+td.num{text-align:center;white-space:nowrap}
+.hit{font-weight:700;color:var(--bad)}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-top:10px}
+summary{cursor:pointer;font-weight:700}
+ul{margin:8px 0 0;padding-left:20px}
+footer{margin-top:40px;color:var(--mute);font-size:13.5px}
+a{color:var(--accent)}
+.sr{position:absolute;left:-9999px}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <p class="paper">논문: 「AI에게 맡긴 서버·방화벽 설정은 얼마나 허술한가」 (조경익, 2026-11-06)</p>
+  <h1>AI 서버 설정 검사기</h1>
+  <p class="one" id="one">이 앱은 AI가 만들어 준 서버·방화벽 설정을 그대로 붙여 넣으려는 서버 초보자를, 논문이 정한 위험 항목 6개를 찾아 고칠 줄까지 알려 주며 돕습니다.</p>
+</header>
+
+<section aria-labelledby="s1">
+  <h2 id="s1">① 설정 붙여 넣고 검사하기</h2>
+  <label for="cfg">AI가 준 답(명령과 서비스 파일)을 그대로 붙여 넣으세요</label>
+  <textarea id="cfg" spellcheck="false" placeholder="예) sudo ufw allow OpenSSH&#10;sudo ufw allow 8801/tcp&#10;..."></textarea>
+  <p class="hint">설명 글과 ``` 코드 블록이 섞여 있어도 됩니다. 코드 블록이 있으면 그 안만 검사합니다.</p>
+  <label for="ports">내 서비스가 쓰는 포트 (쉼표로 여러 개)</label>
+  <input type="text" id="ports" value="8801" inputmode="numeric" autocomplete="off">
+  <div class="row">
+    <button type="button" class="primary" id="run">검사하기</button>
+    <button type="button" id="ex1">예시 ①: 논문에서 흔했던 답</button>
+    <button type="button" id="ex2">예시 ②: 위험이 여러 개인 설정</button>
+    <button type="button" id="clear">지우기</button>
+  </div>
+</section>
+
+<section aria-labelledby="s2">
+  <h2 id="s2">② 내 IP로 SSH 줄 고치기</h2>
+  <label for="ip">내 IP 주소 (SSH로 접속할 컴퓨터의 주소)</label>
+  <input type="text" id="ip" placeholder="예) 203.0.113.7" inputmode="decimal" autocomplete="off">
+  <p class="hint">203.0.113.7 은 예시 주소입니다. 내 주소를 넣으면 SSH 줄을 "그 주소에서만" 열도록 고친 명령을 만들어 줍니다. 이 주소는 이 화면 밖으로 나가지 않습니다.</p>
+</section>
+
+<section aria-labelledby="s3" aria-live="polite">
+  <h2 id="s3">검사 결과</h2>
+  <div id="status" class="status neutral">위 칸에 설정을 붙여 넣고 "검사하기"를 누르세요. 처음이면 예시 버튼을 눌러 보세요.</div>
+  <div id="notes"></div>
+  <div id="findings"></div>
+  <div id="fixedBox" hidden>
+    <h2 style="margin-top:22px">고친 설정 (코드 블록만)</h2>
+    <textarea id="fixed" readonly spellcheck="false" aria-label="고친 설정"></textarea>
+    <div class="row"><button type="button" id="copyFixed">고친 설정 복사</button></div>
+    <p class="hint">앱이 고칠 수 있는 줄만 바꿨습니다. 붙여 넣기 전에 직접 한 번 더 읽어 보세요.</p>
+  </div>
+</section>
+
+<section aria-labelledby="s4">
+  <h2 id="s4">③ AI에게 다시 부탁할 문장</h2>
+  <p style="margin:0 0 6px">AI에게 설정을 다시 만들게 할 때 요청 끝에 덧붙이세요.</p>
+  <textarea id="retry" readonly spellcheck="false" style="min-height:96px" aria-label="AI에게 덧붙일 문장"></textarea>
+  <div class="row"><button type="button" id="copyRetry">문장 복사</button></div>
+  <p class="hint">논문은 이 문장의 효과를 확인하지 않았고 다음 실험으로 제안만 했습니다. 받은 답은 이 앱으로 다시 검사하세요.</p>
+</section>
+
+<section aria-labelledby="s5">
+  <h2 id="s5">논문 결과와 이 입력의 결과</h2>
+  <p style="margin:0">논문은 Claude Haiku에게 같은 요청을 20번 보내(보안 조건 한 줄을 넣은 10번, 넣지 않은 10번) 받은 답을 위험 항목 6개로 채점했습니다.</p>
+  <table>
+    <thead><tr><th>항목</th><th>내용</th><th class="num">논문 20개 답 중</th><th class="num">이 입력</th></tr></thead>
+    <tbody id="paperTable"></tbody>
+  </table>
+  <details open>
+    <summary>이 앱과 논문의 한계</summary>
+    <ul>
+      <li>보안 조건 한 줄을 넣어도 위험 항목 평균은 1.00으로 같았습니다. "한 줄을 넣으면 위험이 줄어든다"는 처음 가설은 지지되지 않았습니다.</li>
+      <li>20개 답은 한 모델(Claude Haiku)의 결과입니다. 다른 모델이나 다른 요청에서는 다를 수 있습니다.</li>
+      <li>이 앱은 글자 규칙으로 줄을 읽는 검사기입니다. 6개 항목 밖의 위험은 찾지 못하고, 걸리지 않았다고 안전한 것도 아닙니다.</li>
+      <li>IP 주소는 IPv4(숫자 4개)만 받습니다.</li>
+    </ul>
+  </details>
+</section>
+
+<footer>예시 데이터는 모두 꾸며 낸 값입니다. 이 앱은 입력을 서버로 보내지 않고, API 키나 비밀값을 쓰지 않습니다. · <a href="../">포트폴리오로 돌아가기</a> · <a href="../paper/">논문 보기</a></footer>
+</main>
+<script src="checker.js"></script>
+<script>
+(function () {
+  'use strict';
+  var C = window.Checker;
+  var $ = function (id) { return document.getElementById(id); };
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function setStatus(kind, text) {
+    var s = $('status');
+    s.className = 'status ' + kind;
+    s.textContent = text;
+  }
+
+  function renderTable(counts) {
+    var tb = $('paperTable');
+    tb.textContent = '';
+    C.RISK_IDS.forEach(function (id) {
+      var r = C.RISKS[id];
+      var tr = el('tr');
+      tr.appendChild(el('td', '', id));
+      tr.appendChild(el('td', '', r.title));
+      var p = el('td', 'num' + (r.paper ? ' hit' : ''), r.paper + ' / ' + C.PAPER_TOTAL);
+      tr.appendChild(p);
+      var n = counts ? counts[id] : null;
+      tr.appendChild(el('td', 'num' + (n ? ' hit' : ''), n === null ? '-' : n + '곳'));
+      tb.appendChild(tr);
+    });
+  }
+
+  function currentOpts() {
+    return { servicePorts: $('ports').value, ip: $('ip').value };
+  }
+
+  function updateRetry() {
+    $('retry').value = C.retryPrompt(currentOpts());
+  }
+
+  function run() {
+    var res;
+    try {
+      res = C.analyze($('cfg').value, currentOpts());
+    } catch (e) {
+      res = { status: 'error', message: '검사 중 문제가 생겼습니다. 내용을 줄여서 다시 붙여 넣어 보세요.', findings: [], counts: null, notes: [] };
+    }
+    var box = $('findings');
+    var notes = $('notes');
+    box.textContent = '';
+    notes.textContent = '';
+    $('fixedBox').hidden = true;
+    var kind = res.status === 'found' ? 'bad' : res.status === 'clean' ? 'good' : 'neutral';
+    setStatus(kind, res.message);
+    if (res.ipError) notes.appendChild(el('div', 'status neutral', res.ipError));
+    (res.notes || []).forEach(function (n) { notes.appendChild(el('div', 'status neutral', n)); });
+    if (res.fenced && res.status !== 'empty' && res.status !== 'error') {
+      notes.appendChild(el('div', 'hint', '``` 코드 블록 안의 줄만 검사했습니다.'));
+    }
+    (res.findings || []).forEach(function (f) {
+      var r = C.RISKS[f.id];
+      var card = el('div', 'card');
+      var h = el('h3');
+      h.appendChild(el('span', 'tag', f.id));
+      h.appendChild(document.createTextNode(r.title));
+      card.appendChild(h);
+      card.appendChild(el('p', '', f.line + '번째 줄: ' + f.detail));
+      card.appendChild(el('pre', '', f.text));
+      card.appendChild(el('p', '', '왜 위험한가: ' + r.why));
+      if (f.fix) {
+        card.appendChild(el('p', 'fix', '이렇게 바꾸세요:'));
+        card.appendChild(el('pre', 'fix', f.fix));
+      } else if (f.hint) {
+        card.appendChild(el('p', 'fix', f.hint));
+      }
+      box.appendChild(card);
+    });
+    if (res.status === 'found' || res.status === 'clean') {
+      $('fixed').value = res.fixed;
+      $('fixedBox').hidden = false;
+    }
+    renderTable(res.counts && res.status !== 'empty' && res.status !== 'error' ? res.counts : null);
+    updateRetry();
+  }
+
+  function copy(id, btn) {
+    var t = $(id);
+    var old = btn.textContent;
+    function done(ok) {
+      btn.textContent = ok ? '복사했습니다' : '직접 선택해서 복사하세요';
+      setTimeout(function () { btn.textContent = old; }, 1800);
+    }
+    try {
+      t.focus();
+      t.select();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t.value).then(function () { done(true); }, function () { done(false); });
+        return;
+      }
+      done(document.execCommand('copy'));
+    } catch (e) { done(false); }
+  }
+
+  $('run').addEventListener('click', run);
+  $('ex1').addEventListener('click', function () { $('cfg').value = C.EXAMPLES.paper.text; run(); });
+  $('ex2').addEventListener('click', function () { $('cfg').value = C.EXAMPLES.risky.text; run(); });
+  $('clear').addEventListener('click', function () { $('cfg').value = ''; run(); });
+  $('ip').addEventListener('input', function () { if ($('cfg').value.trim()) run(); else updateRetry(); });
+  $('ports').addEventListener('input', function () { if ($('cfg').value.trim()) run(); else updateRetry(); });
+  $('copyFixed').addEventListener('click', function () { copy('fixed', this); });
+  $('copyRetry').addEventListener('click', function () { copy('retry', this); });
+
+  renderTable(null);
+  updateRetry();
+})();
+</script>
+</body>
+</html>
