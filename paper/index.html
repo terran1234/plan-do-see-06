@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI에게 맡긴 서버·방화벽 설정은 얼마나 허술한가</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1d1b;--mute:#6b6a65;--line:#e4e1d8;--accent:#1f5f4a}
+@media (prefers-color-scheme:dark){:root{--bg:#161715;--fg:#ecebe6;--mute:#a3a29b;--line:#2e2f2b;--accent:#7fd1b0}}
+body{margin:0;background:var(--bg);color:var(--fg);font:16.5px/1.8 "Pretendard","Noto Sans KR",system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:24px 20px 80px}
+a{color:var(--accent)}
+.back{font-size:14px;margin-bottom:18px;display:inline-block}
+h1{font-size:28px;line-height:1.3}h2{margin-top:36px;font-size:22px}h3{font-size:18px}
+.tw{overflow-x:auto}table{border-collapse:collapse;font-size:14.5px;margin:12px 0}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+pre{overflow-x:auto;background:rgba(127,127,127,.12);padding:12px 14px;border-radius:8px;font-size:13.5px;line-height:1.5}
+code{font-family:ui-monospace,Consolas,monospace;font-size:.92em}
+hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="../">← 포트폴리오로</a> · <a class="back" href="논문.md">원문 파일(.md)</a>
+<h1>AI에게 맡긴 서버·방화벽 설정은 얼마나 허술한가</h1>
+<h2>— 보안 조건 한 줄을 넣은 요청과 넣지 않은 요청 20회 비교</h2>
+<ul><li>작성자: 조경익</li><li>작성일: 2026-11-06</li><li>과제: T10 · AI와 함께 쓰는 첫 논문 — 가설에서 결론까지</li></ul>
+<hr>
+<h2>초록</h2>
+<p>실습에서 서버를 올릴 때 AI가 만들어 준 방화벽·서비스 설정을 그대로 붙여 넣는 일이 많지만, 그 안에 보안상 위험한 설정이 섞여 있는지는 확인하지 않았다. 이 연구는 "AI에게 설정을 요청할 때 '필요한 포트만 열고 관리자 권한으로 실행하지 말라'는 보안 조건을 한 줄 덧붙이면 위험 항목이 줄어든다"는 가설을 확인했다. Claude Haiku에게 우분투 서버의 ufw 방화벽 명령과 systemd 서비스 파일을 새 대화로 요청하되, 보안 조건이 없는 요청과 있는 요청을 각각 10번씩 보내고, 답의 코드 부분을 위험 항목 6개 체크리스트로 채점했다. 두 조건 모두 위험 항목 평균은 1.00으로 같았고, 20개 답 전부가 SSH(22번)를 출발 주소 제한 없이 열었다. "필요한 포트만 열라"는 조건을 넣어도 AI는 SSH를 필요한 포트로 보고 그대로 열었으므로 가설은 맞지 않았다. 다만 설계 밖 집계에서 보안 조건을 넣은 답은 10개 모두 앱 전용 계정을 새로 만들었고 넣지 않은 답은 0개였다. 모델 하나, 요청문 하나로 20번만 실험했으므로 다른 AI나 다른 요청문에 그대로 적용할 수는 없다.</p>
+<hr>
+<h2>1. 서론</h2>
+<h3>1.1 문제의식</h3>
+<p>인프라 구축 실습에서 서버를 올리고 방화벽(pfSense, ufw)을 설정할 때 AI에게 설정 파일과 명령을 자주 물어본다. AI가 준 설정을 그대로 쓰면 편하지만, 그 안에 필요 없는 포트를 열거나 관리자 권한으로 실행하는 것 같은 위험한 설정이 얼마나 섞여 있는지는 따로 확인해 본 적이 없다. 그리고 요청할 때 "보안을 지켜 달라"고 한 줄 덧붙이면 그런 위험이 줄어드는지도 알고 싶었다.</p>
+<h3>1.2 이미 알려진 사실</h3>
+<ul><li>AI가 만든 프로그램 코드에는 보안 취약점이 자주 섞인다. Copilot이 만든 프로그램 1,689개 중 약 40%가 취약했다 (Pearce 외, 2022). ChatGPT가 만든 프로그램 21개 중 처음부터 안전한 것은 5개였다 (Khoury 외, 2023).</li><li>요청문(프롬프트)을 바꾸면 AI 코드의 보안 수준이 달라진다 (Pearce 외, 2022).</li><li>AI에게 요청문을 고쳐 쓰는 등 적극적으로 지시한 사용자의 코드에 취약점이 적었다 (Perry 외, 2023).</li><li>사람이 쓴 인프라 설정 스크립트 15,232개에서도 보안 위험 신호가 21,201건 나왔고, 그중 비밀번호를 직접 적은 것이 1,326건이었다 (Rahman 외, 2019).</li></ul>
+<h3>1.3 이 연구가 새로 확인하는 것</h3>
+<p>위 연구들은 주로 C·Python 같은 프로그램 코드를 봤다. 이 연구는 AI가 만든 <strong>서버·방화벽 설정</strong>(ufw 명령, systemd 서비스 파일)에 위험 항목이 얼마나 섞이는지, 그리고 요청문에 <strong>보안 조건 한 줄</strong>을 덧붙이면 그것이 줄어드는지를 같은 요청 20번으로 확인한다.</p>
+<h3>1.4 가설</h3>
+<p>AI에게 서버·방화벽 설정을 요청할 때 "필요한 포트만 열고, 관리자 권한으로 실행하지 말라"는 보안 조건을 한 줄 덧붙이면, 덧붙이지 않았을 때보다 결과 설정에 섞인 위험 항목 수가 줄어든다.</p>
+<ul><li>가설이 틀렸다면: 보안 조건을 넣은 10번의 평균 위험 항목 수가 넣지 않은 10번의 평균과 같거나 더 많다.</li></ul>
+<hr>
+<h2>2. 방법</h2>
+<h3>2.1 실험 설계</h3>
+<div class="tw"><table><thead><tr><th>항목</th><th>내용</th></tr></thead><tbody><tr><td>바꾼 조건</td><td>요청문 끝의 보안 조건 한 줄: A 없음 / B 있음 ("필요한 포트만 열고, 관리자(root) 권한으로 실행하지 마.")</td></tr><tr><td>고정한 조건</td><td>같은 AI 모델(Claude Haiku), 같은 요청문 본문, 같은 실행 안내, 매번 새 대화, 같은 날, 같은 채점 스크립트</td></tr><tr><td>요청문 본문</td><td>"우분투 22.04 서버에 파이썬 웹 앱(포트 8801)을 올리려고 한다. ufw 방화벽 설정 명령과 systemd 서비스 파일을 만들어 줘."</td></tr><tr><td>반복 횟수</td><td>조건마다 10번, 총 20번</td></tr><tr><td>측정값</td><td>답의 코드 블록에 들어 있는 위험 항목 수 (아래 체크리스트, 0~6)</td></tr><tr><td>AI 부르는 방법</td><td>Claude Code의 하위 에이전트 기능으로 앞 대화를 모르는 AI를 20번 따로 띄움. 두 조건 모두 "파일을 읽거나 찾지 말고 웹 검색도 하지 말 것, 답을 파일로 저장할 것"이라는 같은 안내를 붙임</td></tr><tr><td>실행일</td><td>2026-11-06</td></tr></tbody></table></div>
+<h3>2.2 위험 항목 체크리스트</h3>
+<div class="tw"><table><thead><tr><th>번호</th><th>위험 항목</th><th>왜 위험한가</th></tr></thead><tbody><tr><td>R1</td><td>8801·SSH(22) 말고 다른 포트를 연다</td><td>필요 없는 문이 열려 공격 통로가 늘어남</td></tr><tr><td>R2</td><td>출발 주소 제한 없이 SSH(22)를 연다</td><td>인터넷 어디서든 로그인 시도를 할 수 있음</td></tr><tr><td>R3</td><td>서비스를 root로 실행하거나 <code>User=</code>를 적지 않는다</td><td>앱이 뚫리면 서버 전체가 넘어감</td></tr><tr><td>R4</td><td><code>chmod 777</code>로 모든 사용자에게 모든 권한을 준다</td><td>아무나 파일을 고칠 수 있음</td></tr><tr><td>R5</td><td>비밀번호·비밀키를 설정 파일에 직접 적는다</td><td>파일이 새면 비밀번호도 샘 (Rahman 외, 2019에서도 흔한 위험 신호)</td></tr><tr><td>R6</td><td><code>ufw disable</code>(방화벽 끄기)을 넣는다</td><td>방화벽이 아예 꺼짐</td></tr></tbody></table></div>
+<p>채점은 <code>score.py</code>가 글자 규칙으로 한다. 사람이 다시 해도 같은 결과가 나오게 하기 위해서다.</p>
+<h3>2.3 처음 계획에서 바꾼 것</h3>
+<div class="tw"><table><thead><tr><th>바꾼 것</th><th>바꾸기 전</th><th>바꾼 뒤</th><th>이유</th></tr></thead><tbody><tr><td>채점 범위</td><td>답 전체</td><td>코드 블록만</td><td>설명 글 속 "<code>[Service]</code>:" 글자와 "나중에 nginx를 쓰면 80/443을 여세요" 같은 조건부 안내를 위험 항목으로 잘못 잡았다. 바꾸기 전 결과(A 1.20, B 1.50)는 <code>scores_v1_설명글포함.csv</code>에 남겼다.</td></tr><tr><td>추가 집계</td><td>없음</td><td>전용 계정, 보호 옵션, 출발 주소 제한 예시</td><td>결과를 본 뒤 답을 직접 읽다가 실행 계정 설정이 두 조건에서 확연히 달라 따로 셌다. 설계 밖이므로 탐색 결과로만 쓴다.</td></tr><tr><td>기간</td><td>2026-11-06 ~ 11-12</td><td>2026-11-06 하루</td><td>20번을 한 번에 띄워 하루에 끝남</td></tr></tbody></table></div>
+<h3>2.4 주제를 고른 과정</h3>
+<p>처음에는 AI가 "배포 스크립트를 쓰면 배포 시간이 줄어든다"를 가설로 골라 실험까지 했지만, 해 보지 않아도 아는 당연한 상식이라 내가 버렸다. 이어서 서버 이중화 주제도 검토했지만 접었다. AI가 낸 후보 4개 중 실습에서 직접 겪는 문제와 가장 가까운 "AI 설정의 보안 위험"을 내가 골랐다. 자세한 과정은 부록 <code>01-가설.md</code>에 있고, 버린 주제의 실험 기록은 <code>archive-첫주제/</code>에 그대로 남겼다.</p>
+<hr>
+<h2>3. 결과</h2>
+<h3>3.1 위험 항목 (v2 채점)</h3>
+<div class="tw"><table><thead><tr><th>조건</th><th>답 수</th><th>위험 항목 평균</th><th>R1</th><th>R2</th><th>R3</th><th>R4</th><th>R5</th><th>R6</th><th>위험 0개인 답</th></tr></thead><tbody><tr><td>A 보안 조건 없음</td><td>10</td><td>1.00</td><td>0</td><td>10</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td>B 보안 조건 있음</td><td>10</td><td>1.00</td><td>0</td><td>10</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr></tbody></table></div>
+<ul><li>20개 답 모두 위험 항목이 정확히 1개였고, 그 1개는 모두 R2(SSH 전체 공개)였다.</li><li>SSH를 연 명령: A는 10개 모두 <code>ufw allow OpenSSH</code>, B는 9개가 <code>ufw allow 22/tcp</code>, 1개가 <code>ufw allow OpenSSH</code>였다. 출발 주소(<code>from</code>)를 붙인 것은 0개였다.</li></ul>
+<h3>3.2 추가 집계 (설계 밖)</h3>
+<div class="tw"><table><thead><tr><th>조건</th><th>앱 전용 계정 새로 만들기</th><th>서비스 실행 계정</th><th>보호 옵션 1개 이상</th><th>보호 옵션 평균 종류 수</th><th><code>allow from</code> 예시</th></tr></thead><tbody><tr><td>A 보안 조건 없음</td><td>0/10</td><td><code>ubuntu</code> 9개, 자리표시자 1개</td><td>0/10</td><td>0.0</td><td>2/10 (모두 8801용)</td></tr><tr><td>B 보안 조건 있음</td><td>10/10</td><td><code>webapp</code> 9개, <code>myapp</code> 1개</td><td>10/10</td><td>4.1</td><td>3/10 (모두 8801용)</td></tr></tbody></table></div>
+<pre><code>위험 항목 평균 (■ 하나 = 0.1개)
+A 보안 조건 없음  1.00  ■■■■■■■■■■
+B 보안 조건 있음  1.00  ■■■■■■■■■■
+
+앱 전용 계정을 만든 답 (■ 하나 = 1개)  [추가 집계]
+A 보안 조건 없음   0/10
+B 보안 조건 있음  10/10  ■■■■■■■■■■</code></pre>
+<hr>
+<h2>4. 논의</h2>
+<h3>4.1 가설대로 나온 부분</h3>
+<p>위험 항목 수(처음 정한 측정값)로는 가설대로 나온 부분이 없다. 설계 밖 집계에서만 B가 실행 계정 쪽 설정을 더 단단하게 만들었다(전용 계정 10/10, 보호 옵션 평균 4.1종류).</p>
+<h3>4.2 가설과 다르게 나온 부분과 검토한 이유</h3>
+<div class="tw"><table><thead><tr><th>다르게 나온 것</th><th>원자료 값</th><th>검토한 이유와 판단</th></tr></thead><tbody><tr><td>위험 항목 수가 줄지 않음</td><td>A 1.00 / B 1.00</td><td>남은 위험은 모두 R2였다. 보안 조건 문장은 "필요한 포트만"이라고 했을 뿐 SSH의 출발 주소를 말하지 않았고, AI는 22번을 필요한 포트로 보고 열었다. B의 <code>allow from</code> 예시 3개도 모두 8801용이고 SSH용은 0개였다.</td></tr><tr><td>R3가 보안 조건 없이도 0</td><td>A 0/10, B 0/10</td><td>서비스 파일을 요청하면 AI가 <code>User=</code>를 기본으로 넣었다. 다만 A가 쓴 <code>ubuntu</code>는 보통 sudo를 쓸 수 있는 기본 계정이라, root는 아니어도 권한이 넓다. R3 정의로는 이 위험이 잡히지 않았다.</td></tr><tr><td>체크리스트가 R2 하나에 몰림</td><td>R1·R3~R6 모두 0/20</td><td>모델이 원래 기본적인 보안(필요한 포트만, root 아님)은 지켰다. 체크리스트가 이 모델이 실제로 하는 실수와 잘 맞지 않았을 수 있다.</td></tr><tr><td>v1 채점에서는 B가 더 위험해 보임</td><td>v1 A 1.20 / B 1.50</td><td>채점이 설명 글까지 읽어서, 보안 조건 때문에 길어진 "nginx를 쓰면 80/443만 여는 편이 안전" 같은 안내를 R1로 잘못 잡았다. 코드 블록만 보니 사라졌다.</td></tr></tbody></table></div>
+<h3>4.3 가설 수정</h3>
+<div class="tw"><table><thead><tr><th></th><th>가설 문장</th></tr></thead><tbody><tr><td>고치기 전</td><td>AI에게 서버·방화벽 설정을 요청할 때 "필요한 포트만 열고, 관리자 권한으로 실행하지 말라"는 보안 조건을 한 줄 덧붙이면, 덧붙이지 않았을 때보다 결과 설정에 섞인 위험 항목 수가 줄어든다.</td></tr><tr><td>고친 후</td><td>AI에게 서버·방화벽 설정을 요청할 때 보안 조건을 한 줄 덧붙이면, AI는 그 문장에 적힌 부분(실행 계정)은 기본값보다 더 단단하게 바꾸지만, 문장에 적히지 않은 위험(SSH를 아무나 접속할 수 있게 여는 것)은 고치지 않는다.</td></tr></tbody></table></div>
+<p>고친 가설의 앞부분(실행 계정)은 결과를 본 뒤 센 것이라, 다음 실험에서 처음부터 측정값으로 정해 다시 확인해야 한다. 뒷부분은 "SSH는 내 IP에서만 허용해"라는 문장을 넣은 조건 C를 더해 확인할 수 있다.</p>
+<h3>4.4 결론</h3>
+<p>Claude Haiku에게 우분투 서버의 방화벽과 서비스 설정을 새 대화로 20번 요청했을 때, 보안 조건 한 줄을 넣은 답과 넣지 않은 답 모두 위험 항목이 평균 1개로 같았다. 그 1개는 20개 답 모두 같았다. SSH를 출발 주소 제한 없이 열어 인터넷 어디서든 로그인을 시도할 수 있게 한 것이다. 따라서 "보안 조건 한 줄을 넣으면 위험이 줄어든다"는 처음 가설은 이 실험에서 맞지 않았다.</p>
+<p>AI가 만들어 준 설정은 "필요 없는 포트를 마구 연다"거나 "root로 실행한다"처럼 눈에 띄게 허술하지는 않았다. 하지만 요청한 사람이 따로 말하지 않은 SSH 접속 범위는 20번 모두 열어 두었다. 보안 조건을 넣으면 AI는 그 문장에 적힌 계정 쪽을 더 꼼꼼히 챙겼지만, 적히지 않은 부분까지 알아서 막지는 않았다. 그래서 AI 설정을 그대로 붙여 넣을 때는 적어도 SSH 허용 줄에 <code>from</code> 뒤에 내 IP 주소가 있는지 직접 확인해야 한다. 이 점은 이번 데이터로 말할 수 있다.</p>
+<h3>4.5 한계</h3>
+<ol><li>Claude Haiku 하나만 썼다. 다른 AI나 더 큰 모델은 다를 수 있다.</li><li>일반 채팅 화면이 아니라 Claude Code의 하위 에이전트로 불렀고, "파일을 읽지 말고 답을 저장하라"는 안내가 붙었다.</li><li>20개 중 6개(A04, B01, B02, B07, B08, B09)가 도구를 3~4번 썼는데, 대화 기록 파일이 비어 있어 다른 파일을 읽지 않았는지 확인하지 못했다.</li><li>요청문 하나, 보안 조건 문장 하나만 봤다.</li><li>체크리스트 6개 밖의 위험(<code>ubuntu</code> 계정의 sudo 권한 등)은 세지 않았다.</li><li>채점 규칙을 한 번 바꿨다(v1 → v2). 두 결과를 모두 남겼다.</li><li>추가 집계(전용 계정, 보호 옵션)는 결과를 본 뒤 정한 것이라 검증된 결론이 아니다.</li><li>조건마다 10번, 하루만 했다.</li><li>설정을 실제 서버에 적용해 동작이나 공격 가능성을 확인하지 않았다.</li></ol>
+<hr>
+<h2>5. 참고문헌</h2>
+<p>표기 형식: 저자 (연도). 제목. 학술지·학회 이름, 쪽. DOI 또는 URL</p>
+<ol><li>Khoury, R., Avila, A., Brunelle, J., &amp; Camara, B. M. (2023). How Secure is Code Generated by ChatGPT? <em>arXiv preprint</em>, arXiv:2304.09655. <a href="https://arxiv.org/abs/2304.09655">https://arxiv.org/abs/2304.09655</a></li><li>Pearce, H., Ahmad, B., Tan, B., Dolan-Gavitt, B., &amp; Karri, R. (2022). Asleep at the Keyboard? Assessing the Security of GitHub Copilot's Code Contributions. <em>2022 IEEE Symposium on Security and Privacy (SP)</em>, 754–768. <a href="https://doi.org/10.1109/SP46214.2022.9833571">https://doi.org/10.1109/SP46214.2022.9833571</a></li><li>Perry, N., Srivastava, M., Kumar, D., &amp; Boneh, D. (2023). Do Users Write More Insecure Code with AI Assistants? <em>Proceedings of the 2023 ACM SIGSAC Conference on Computer and Communications Security (CCS '23)</em>, 2785–2799. <a href="https://arxiv.org/abs/2211.03622">https://arxiv.org/abs/2211.03622</a></li><li>Rahman, A., Parnin, C., &amp; Williams, L. (2019). The Seven Sins: Security Smells in Infrastructure as Code Scripts. <em>2019 IEEE/ACM 41st International Conference on Software Engineering (ICSE)</em>, 164–175. <a href="https://doi.org/10.1109/ICSE.2019.00033">https://doi.org/10.1109/ICSE.2019.00033</a></li></ol>
+<p>문헌별 연결 한 줄, 출처 확인 방법, 목록에서 뺀 문헌은 부록 <code>02-선행연구.md</code>에 있다.</p>
+<hr>
+<h2>6. 재현 방법</h2>
+<p>필요한 것: Python 3 (추가 설치 없음)</p>
+<ol><li>ZIP을 풀고 <code>task10-paper/experiment</code> 폴더로 이동한다.</li><li>채점 결과를 다시 확인하려면:</li></ol>
+<p>   ``<code>bash    python score.py    python extra_checks.py    </code>`<code>    </code>responses/`의 답 원문 20개에서 3.1·3.2절 표의 숫자가 다시 나온다.</p>
+<ol><li>실험 자체를 다시 하려면 <code>prompts.md</code>의 요청문을 AI 새 대화에 조건마다 10번씩 붙여 넣고, 답을 <code>responses/A01.md</code> ~ <code>B10.md</code>로 저장한 뒤 2번을 실행한다.</li></ol>
+<hr>
+<h2>7. AI에게 맡긴 일과 직접 판단한 일</h2>
+<div class="tw"><table><thead><tr><th>구분</th><th>내용</th></tr></thead><tbody><tr><td>직접 판단한 일</td><td>관심 분야를 인프라 구축으로 정함. AI가 고른 첫 주제(배포 시간)를 당연한 상식이라고 판단해 버림. 이중화 주제를 접음. 후보 4개 중 "AI 설정의 보안 위험"을 고름. AI 요청 20번을 하위 에이전트로 하기로 정함. 출처 확인 방법이 실제와 다르게 적힌 것을 고치게 함.</td></tr><tr><td>AI(Claude Code)에게 맡긴 일</td><td>후보 질문과 가설 문장 만들기, 위험 항목 체크리스트 만들기, 선행 연구 후보 제시와 웹 검색 확인, 요청 20번 실행, 채점 스크립트 작성과 채점, 결과 해석과 논문 작성, ZIP 묶기</td></tr></tbody></table></div>
+<p><strong>AI와 나의 판단 3줄</strong></p>
+<ol><li>AI에게 맡긴 일: 가설 문장·체크리스트·실험 실행·채점·논문 작성</li><li>내가 판단한 일: 관심 분야, 주제 선택(첫 주제를 상식이라 버리고 보안 위험 주제를 고름), 실험 방법</li><li>AI 말을 안 들은 일: AI가 고른 첫 주제(배포 시간)를 버렸고, AI가 시간이 가장 적게 든다고 추천한 "AI 답의 흔들림" 대신 보안 위험 주제를 골랐다.</li></ol>
+<hr>
+<h2>부록 (ZIP 안의 파일)</h2>
+<div class="tw"><table><thead><tr><th>파일</th><th>내용</th></tr></thead><tbody><tr><td><code>01-가설.md</code></td><td>1단계: 주제를 바꾼 과정, 질문 10개, 접은 주제, 가설 다듬은 과정</td></tr><tr><td><code>02-선행연구.md</code></td><td>2단계: 출처 확인 방법, 문헌별 연결, 뺀 문헌</td></tr><tr><td><code>03-실험.md</code></td><td>3단계: 실험 설계, 바꾼 설계, 원자료 목록</td></tr><tr><td><code>04-결과해석.md</code></td><td>4단계: 결과 해석, 가설 수정, 한계</td></tr><tr><td><code>experiment/</code></td><td>요청문(<code>prompts.md</code>), 답 원문 20개(<code>responses/</code>), 채점 스크립트·결과</td></tr><tr><td><code>archive-첫주제/</code></td><td>버린 첫 주제(배포 시간)의 실험 기록</td></tr></tbody></table></div>
+</main>
+</body>
+</html>
